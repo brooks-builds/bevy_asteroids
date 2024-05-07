@@ -7,8 +7,12 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, Res, ResMut},
     },
+    hierarchy::BuildChildren,
     input::{keyboard::KeyCode, ButtonInput},
-    math::{primitives::Triangle2d, Quat, Vec3},
+    math::{
+        primitives::{Rectangle, Triangle2d},
+        Quat, Vec3,
+    },
     render::{color::Color, mesh::Mesh},
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     time::Time,
@@ -37,13 +41,21 @@ pub fn add_player(
         ..Default::default()
     };
 
+    let thrust_mesh = MaterialMesh2dBundle {
+        mesh: meshes.add(Rectangle::new(10., 50.)).into(),
+        material: materials.add(Color::RED),
+        ..Default::default()
+    };
+
     let rotation = Rotation(Quat::default());
 
     let thrust = Thrust(false);
 
     let velocity = Velocity(Vec3::zeroed());
 
-    commands.spawn((
+    let ship_thruster = commands.spawn(thrust_mesh).id();
+
+    let mut ship = commands.spawn((
         Position(Vec3::zeroed()),
         ship_mesh,
         RotateSpeed(0.),
@@ -51,6 +63,8 @@ pub fn add_player(
         thrust,
         velocity,
     ));
+
+    ship.add_child(ship_thruster);
 }
 
 pub fn draw_ship(
