@@ -1,6 +1,6 @@
 use bevy::{
     ecs::component::Component,
-    math::{Quat, Vec2, Vec3},
+    math::{Quat, Vec3},
 };
 
 #[derive(Component)]

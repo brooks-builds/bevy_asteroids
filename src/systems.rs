@@ -1,17 +1,22 @@
+use crate::components::{Position, RotateSpeed, Rotation, Thrust, Velocity};
 use bevy::{
-    asset::Assets,
+    asset::{Assets, Handle},
     core::Zeroable,
     core_pipeline::core_2d::Camera2dBundle,
-    ecs::system::{Commands, Query, Res, ResMut},
+    ecs::{
+        entity::Entity,
+        system::{Commands, Query, Res, ResMut},
+    },
     input::{keyboard::KeyCode, ButtonInput},
-    math::{primitives::Triangle2d, Quat, Vec2, Vec3},
+    math::{primitives::Triangle2d, Quat, Vec3},
     render::{color::Color, mesh::Mesh},
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     time::Time,
     transform::components::Transform,
 };
 
-use crate::components::{Position, RotateSpeed, Rotation, Thrust, Velocity};
+const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
+const THRUSTING_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(38475109234891725);
 
 pub fn add_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -22,9 +27,12 @@ pub fn add_player(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
+    materials.insert(NORMAL_SHIP_COLOR_ID, Color::ORANGE_RED.into());
+    materials.insert(THRUSTING_SHIP_COLOR_ID, Color::RED.into());
+
     let ship_mesh = MaterialMesh2dBundle {
         mesh: meshes.add(Triangle2d::default()).into(),
-        material: materials.add(Color::ORANGE_RED),
+        material: NORMAL_SHIP_COLOR_ID,
         transform: Transform::default().with_scale(Vec3::splat(100.)),
         ..Default::default()
     };
@@ -45,10 +53,21 @@ pub fn add_player(
     ));
 }
 
-pub fn draw_ship(mut query: Query<(&mut Transform, &Position)>) {
-    for (mut transform, position) in &mut query {
+pub fn draw_ship(
+    mut query: Query<(&mut Transform, &Position, &Thrust, Entity)>,
+    mut commands: Commands,
+) {
+    for (mut transform, position, thrust, entity) in &mut query {
         transform.translation.x = position.0.x;
         transform.translation.y = position.0.y;
+
+        let mut entity_commands = commands.entity(entity);
+
+        if thrust.0 {
+            entity_commands.insert(THRUSTING_SHIP_COLOR_ID);
+        } else {
+            entity_commands.insert(NORMAL_SHIP_COLOR_ID);
+        }
     }
 }
 
@@ -85,12 +104,12 @@ pub fn input_thrust_ship(keyboard_input: Res<ButtonInput<KeyCode>>, mut query: Q
     }
 }
 
-pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Rotation, &Transform)>) {
-    for (thrust, mut velocity, rotation, transform) in &mut query {
+pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
+    for (thrust, mut velocity, transform) in &mut query {
         if thrust.0 {
-            let mut acceleration = 1.;
+            let acceleration = 1.;
 
-            let mut direction = transform.rotation * Vec3::Y;
+            let direction = transform.rotation * Vec3::Y;
             let direction = direction.normalize();
 
             velocity.0 += acceleration * direction;
