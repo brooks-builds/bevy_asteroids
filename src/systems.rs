@@ -3,11 +3,8 @@ use bevy::{
     asset::{Assets, Handle},
     core::Zeroable,
     core_pipeline::core_2d::Camera2dBundle,
-    ecs::{
-        entity::Entity,
-        system::{Commands, Query, Res, ResMut},
-    },
-    hierarchy::BuildChildren,
+    ecs::system::{Commands, Query, Res, ResMut},
+    hierarchy::{BuildChildren, Children},
     input::{keyboard::KeyCode, ButtonInput},
     math::{
         primitives::{Rectangle, Triangle2d},
@@ -31,7 +28,7 @@ pub fn add_player(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    materials.insert(NORMAL_SHIP_COLOR_ID, Color::ORANGE_RED.into());
+    materials.insert(NORMAL_SHIP_COLOR_ID, Color::ANTIQUE_WHITE.into());
     materials.insert(THRUSTING_SHIP_COLOR_ID, Color::RED.into());
 
     let ship_mesh = MaterialMesh2dBundle {
@@ -42,8 +39,9 @@ pub fn add_player(
     };
 
     let thrust_mesh = MaterialMesh2dBundle {
-        mesh: meshes.add(Rectangle::new(10., 50.)).into(),
-        material: materials.add(Color::RED),
+        mesh: meshes.add(Rectangle::new(0.3, 0.5)).into(),
+        material: NORMAL_SHIP_COLOR_ID,
+        transform: Transform::default().with_translation(Vec3::new(0., -0.3, -0.1)),
         ..Default::default()
     };
 
@@ -68,19 +66,21 @@ pub fn add_player(
 }
 
 pub fn draw_ship(
-    mut query: Query<(&mut Transform, &Position, &Thrust, Entity)>,
+    mut query: Query<(&mut Transform, &Position, &Thrust, &Children)>,
     mut commands: Commands,
 ) {
-    for (mut transform, position, thrust, entity) in &mut query {
+    for (mut transform, position, thrust, children) in &mut query {
         transform.translation.x = position.0.x;
         transform.translation.y = position.0.y;
 
-        let mut entity_commands = commands.entity(entity);
+        let thrusters = children
+            .first()
+            .expect("couldn't find the first child, which should be thrusters");
 
         if thrust.0 {
-            entity_commands.insert(THRUSTING_SHIP_COLOR_ID);
+            commands.entity(*thrusters).insert(THRUSTING_SHIP_COLOR_ID);
         } else {
-            entity_commands.insert(NORMAL_SHIP_COLOR_ID);
+            commands.entity(*thrusters).insert(NORMAL_SHIP_COLOR_ID);
         }
     }
 }
