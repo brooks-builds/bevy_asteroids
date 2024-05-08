@@ -1,16 +1,20 @@
-use crate::components::{MainCamera, Position, RotateSpeed, Rotation, Thrust, Velocity};
+use std::time::Duration;
+
+use crate::components::{
+    Bullet, Firing, MainCamera, Position, RotateSpeed, Rotation, Ship, Thrust, Velocity,
+};
 use bevy::{
     asset::{Assets, Handle},
     core::Zeroable,
     core_pipeline::core_2d::Camera2dBundle,
     ecs::{
-        query::With,
+        query::{With, Without},
         system::{Commands, Query, Res, ResMut},
     },
     hierarchy::{BuildChildren, Children},
     input::{keyboard::KeyCode, ButtonInput},
     math::{
-        primitives::{Rectangle, Triangle2d},
+        primitives::{Circle, Rectangle, Triangle2d},
         Quat, Vec3,
     },
     render::{
@@ -19,9 +23,8 @@ use bevy::{
         mesh::Mesh,
     },
     sprite::{ColorMaterial, MaterialMesh2dBundle},
-    time::Time,
+    time::{Time, Timer},
     transform::components::Transform,
-    window::PrimaryWindow,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -49,21 +52,17 @@ pub fn add_player(
         transform: Transform::default().with_scale(Vec3::splat(50.)),
         ..Default::default()
     };
-
     let thrust_mesh = MaterialMesh2dBundle {
         mesh: meshes.add(Rectangle::new(0.3, 0.5)).into(),
         material: NORMAL_SHIP_COLOR_ID,
         transform: Transform::default().with_translation(Vec3::new(0., -0.3, -0.1)),
         ..Default::default()
     };
-
     let rotation = Rotation(Quat::default());
-
     let thrust = Thrust(false);
-
     let velocity = Velocity(Vec3::zeroed());
-
     let ship_thruster = commands.spawn(thrust_mesh).id();
+    let firing = Firing(false);
 
     let mut ship = commands.spawn((
         Position(Vec3::zeroed()),
@@ -72,19 +71,15 @@ pub fn add_player(
         rotation,
         thrust,
         velocity,
+        Ship,
+        firing,
     ));
 
     ship.add_child(ship_thruster);
 }
 
-pub fn draw_ship(
-    mut query: Query<(&mut Transform, &Position, &Thrust, &Children)>,
-    mut commands: Commands,
-) {
-    for (mut transform, position, thrust, children) in &mut query {
-        transform.translation.x = position.0.x;
-        transform.translation.y = position.0.y;
-
+pub fn change_thruster_colors(mut query: Query<(&Thrust, &Children)>, mut commands: Commands) {
+    for (thrust, children) in &mut query {
         let thrusters = children
             .first()
             .expect("couldn't find the first child, which should be thrusters");
@@ -94,6 +89,13 @@ pub fn draw_ship(
         } else {
             commands.entity(*thrusters).insert(NORMAL_SHIP_COLOR_ID);
         }
+    }
+}
+
+pub fn update_positions(mut query: Query<(&mut Transform, &Position), Without<Ship>>) {
+    for (mut transform, position) in &mut query {
+        transform.translation.x = position.0.x;
+        transform.translation.y = position.0.y;
     }
 }
 
@@ -127,6 +129,16 @@ pub fn input_rotate_ship(
 pub fn input_thrust_ship(keyboard_input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Thrust>) {
     for mut thrust in &mut query {
         thrust.0 = keyboard_input.pressed(KeyCode::ArrowUp);
+    }
+}
+
+pub fn input_firing(keyboard_input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Firing>) {
+    let mut firing = query.single_mut();
+
+    if keyboard_input.pressed(KeyCode::Space) {
+        firing.0 = true;
+    } else {
+        firing.0 = false;
     }
 }
 
@@ -172,4 +184,35 @@ pub fn wraparound_entities(
             position.0.y = world_size.y;
         }
     }
+}
+
+pub fn fire_bullet(
+    mut commands: Commands,
+    mut firing_query: Query<&mut Firing>,
+    ship_query: Query<(&Position, &Rotation), With<Ship>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    let mut firing = firing_query.single_mut();
+    let (ship_position, ship_rotation) = ship_query.single();
+
+    if firing.0 {
+        firing.0 = false;
+    } else {
+        return;
+    }
+
+    let bullet_position = ship_position.clone();
+    let bullet_mesh = MaterialMesh2dBundle {
+        mesh: meshes.add(Circle::default()).into(),
+        material: materials.add(Color::WHITE),
+        transform: Transform::default()
+            .with_scale(Vec3::splat(2.))
+            .with_rotation(ship_rotation.0.clone()),
+        ..Default::default()
+    };
+    let direction = (bullet_mesh.transform.rotation * Vec3::Y).normalize() * 500.;
+    let bullet_velocity = Velocity(direction);
+
+    commands.spawn((Bullet, bullet_position, bullet_velocity, bullet_mesh));
 }

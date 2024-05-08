@@ -20,7 +20,7 @@ impl Plugin for Game {
         app.add_systems(
             Update,
             (
-                draw_ship,
+                change_thruster_colors,
                 (
                     input_rotate_ship,
                     rotate_ship,
@@ -28,6 +28,9 @@ impl Plugin for Game {
                     apply_thrust,
                     apply_velocity,
                     wraparound_entities,
+                    input_firing,
+                    fire_bullet,
+                    update_positions,
                 )
                     .chain(),
             ),
