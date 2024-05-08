@@ -1,26 +1,38 @@
-use crate::components::{Position, RotateSpeed, Rotation, Thrust, Velocity};
+use crate::components::{MainCamera, Position, RotateSpeed, Rotation, Thrust, Velocity};
 use bevy::{
     asset::{Assets, Handle},
     core::Zeroable,
     core_pipeline::core_2d::Camera2dBundle,
-    ecs::system::{Commands, Query, Res, ResMut},
+    ecs::{
+        query::With,
+        system::{Commands, Query, Res, ResMut},
+    },
     hierarchy::{BuildChildren, Children},
     input::{keyboard::KeyCode, ButtonInput},
     math::{
         primitives::{Rectangle, Triangle2d},
         Quat, Vec3,
     },
-    render::{color::Color, mesh::Mesh},
+    render::{
+        camera::{Camera, ScalingMode},
+        color::Color,
+        mesh::Mesh,
+    },
     sprite::{ColorMaterial, MaterialMesh2dBundle},
     time::Time,
     transform::components::Transform,
+    window::PrimaryWindow,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
 const THRUSTING_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(38475109234891725);
 
 pub fn add_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    let mut camera = Camera2dBundle::default();
+
+    camera.projection.scaling_mode = ScalingMode::WindowSize(1.0);
+
+    commands.spawn((camera, MainCamera));
 }
 
 pub fn add_player(
@@ -34,7 +46,7 @@ pub fn add_player(
     let ship_mesh = MaterialMesh2dBundle {
         mesh: meshes.add(Triangle2d::default()).into(),
         material: NORMAL_SHIP_COLOR_ID,
-        transform: Transform::default().with_scale(Vec3::splat(100.)),
+        transform: Transform::default().with_scale(Vec3::splat(50.)),
         ..Default::default()
     };
 
@@ -134,5 +146,30 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
 pub fn apply_velocity(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
     for (mut position, velocity) in &mut query {
         position.0 += velocity.0 * time.delta_seconds();
+    }
+}
+
+pub fn wraparound_entities(
+    mut query: Query<&mut Position>,
+    camera_query: Query<&Camera, With<MainCamera>>,
+) {
+    let camera = camera_query.single();
+    let world_size = camera
+        .logical_viewport_rect()
+        .expect("trying to get viewport size in wraparound entities system")
+        .half_size();
+
+    for mut position in &mut query {
+        if position.0.x > world_size.x {
+            position.0.x = -world_size.x;
+        } else if position.0.x < -world_size.x {
+            position.0.x = world_size.x;
+        }
+
+        if position.0.y > world_size.y {
+            position.0.y = -world_size.y;
+        } else if position.0.y < -world_size.y {
+            position.0.y = world_size.y;
+        }
     }
 }

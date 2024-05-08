@@ -17,3 +17,6 @@ pub struct Rotation(pub Quat);
 
 #[derive(Component)]
 pub struct Thrust(pub bool);
+
+#[derive(Component)]
+pub struct MainCamera;

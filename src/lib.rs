@@ -27,6 +27,7 @@ impl Plugin for Game {
                     input_thrust_ship,
                     apply_thrust,
                     apply_velocity,
+                    wraparound_entities,
                 )
                     .chain(),
             ),
