@@ -1,6 +1,6 @@
 use bevy::{
     ecs::component::Component,
-    math::{bounding::BoundingCircle, Quat, Vec3},
+    math::{Quat, Vec3},
     prelude::{Deref, DerefMut, Vec2},
     time::Timer,
 };
@@ -49,12 +49,6 @@ pub struct BulletTimer(pub Timer);
 
 #[derive(Component)]
 pub struct Asteroid;
-
-#[derive(Component, Deref, DerefMut)]
-pub struct CollisionDetection(pub BoundingCircle);
-
-#[derive(Component)]
-pub struct Collidable;
 
 #[derive(Component, Deref, DerefMut)]
 pub struct Size(pub f32);

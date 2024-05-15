@@ -7,10 +7,7 @@ use bevy_prototype_lyon::{
 };
 use rand::{thread_rng, Rng};
 
-use crate::{
-    components::{Asteroid, Bullet, Collidable, MainCamera, Position, Ship, Size, Velocity},
-    events::Collision,
-};
+use crate::components::{Asteroid, Bullet, MainCamera, Position, Size, Velocity};
 
 pub fn spawn_asteroids(
     mut commands: Commands,
@@ -49,7 +46,6 @@ pub fn spawn_asteroids(
             Asteroid,
             position,
             Velocity(velocity),
-            Collidable,
             size,
         ));
     }
@@ -80,45 +76,18 @@ fn create_asteroid_shape(scale: f32) -> (Polygon, Size) {
     )
 }
 
-pub fn handle_collisions(
-    bullet_query: Query<&Bullet>,
-    asteroid_query: Query<&Asteroid>,
-    mut commands: Commands,
-    mut collision_events: EventReader<Collision>,
-) {
-    for Collision(collided_a, collided_b) in collision_events.read() {
-        let collided_entities = [collided_a, collided_b];
-        let Some(&bullet) = collided_entities
-            .into_iter()
-            .find(|&&entity| bullet_query.get(entity).is_ok())
-        else {
-            continue;
-        };
-        let Some(&asteroid) = collided_entities
-            .into_iter()
-            .find(|&&entity| asteroid_query.get(entity).is_ok())
-        else {
-            continue;
-        };
-
-        commands.entity(asteroid).despawn();
-        commands.entity(bullet).despawn();
-    }
-}
-
-#[allow(unused)]
-/// From @rasmusgo1 on Twitch
-pub fn handle_ship_collisions(
+pub fn bullets_hitting_asteroids(
     asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
-    ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
+    bullet_query: Query<(&Position, &Size, Entity), With<Bullet>>,
     mut bevy_commands: Commands,
 ) {
-    for (ship_position, ship_size, ship_entity) in ship_query.iter() {
-        for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
+    for (asteroid_position, asteroid_size, asteroid_entity) in asteroid_query.iter() {
+        for (bullet_position, bullet_size, _bullet_entity) in bullet_query.iter() {
             let distance =
-                ship_position.distance(**asteroid_position) - (**ship_size) - (**asteroid_size);
+                asteroid_position.distance(**bullet_position) - (**asteroid_size) - (**bullet_size);
             if distance <= 0. {
-                bevy_commands.entity(ship_entity).despawn_recursive();
+                bevy_commands.entity(asteroid_entity).despawn();
+                break;
             }
         }
     }

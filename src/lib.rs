@@ -1,10 +1,8 @@
 mod components;
-pub mod events;
 mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use events::Collision;
 
 pub fn run() {
     App::new()
@@ -16,7 +14,6 @@ struct Game;
 
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
-        app.add_event::<Collision>();
         app.add_systems(
             Startup,
             (
@@ -40,10 +37,9 @@ impl Plugin for Game {
                     systems::shared_systems::update_positions,
                     systems::bullet_systems::delete_expired_bullets,
                     systems::asteroid_systems::spawn_asteroids,
-                    systems::shared_systems::detect_collisions,
                     // systems::debug_systems::visualize_size,
-                    systems::ship_systems::handle_ship_collisions,
-                    systems::asteroid_systems::handle_collisions,
+                    systems::ship_systems::ship_colliding_with_asteroids,
+                    systems::asteroid_systems::bullets_hitting_asteroids,
                 )
                     .chain(),
             ),

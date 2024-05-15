@@ -1,9 +1,9 @@
-use crate::components::{Collidable, Position, Size};
+use crate::components::{Position, Size};
 use bevy::gizmos::gizmos::Gizmos;
 use bevy::prelude::*;
 
 #[allow(unused)]
-pub fn visualize_size(mut gizmos: Gizmos, query: Query<(&Position, &Size), With<Collidable>>) {
+pub fn visualize_size(mut gizmos: Gizmos, query: Query<(&Position, &Size)>) {
     for (position, size) in &query {
         gizmos.circle_2d(
             position.into(),

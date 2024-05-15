@@ -63,7 +63,6 @@ pub fn fire_bullet(
         bullet_velocity,
         bullet_mesh,
         bullet_timer,
-        Collidable,
         bullet_size,
     ));
 }

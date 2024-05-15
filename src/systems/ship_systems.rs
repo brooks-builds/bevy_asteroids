@@ -2,12 +2,8 @@ use std::time::Duration;
 
 use bevy::{core::Zeroable, prelude::*, sprite::MaterialMesh2dBundle};
 
-use crate::{
-    components::{
-        Asteroid, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size,
-        Thrust, Velocity,
-    },
-    events::Collision,
+use crate::components::{
+    Asteroid, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size, Thrust, Velocity,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -54,7 +50,6 @@ pub fn add_player(
         Ship,
         firing,
         firing_timer,
-        Collidable,
         ship_size,
     ));
 
@@ -133,28 +128,19 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
     }
 }
 
-pub fn handle_ship_collisions(
-    ship_query: Query<&Ship>,
-    asteroid_query: Query<&Asteroid>,
-    mut collision_event: EventReader<Collision>,
+pub fn ship_colliding_with_asteroids(
+    asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
+    ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
     mut bevy_commands: Commands,
 ) {
-    for Collision(entity_a, entity_b) in collision_event.read() {
-        let collided_entities = [entity_a, entity_b];
-
-        let Some(ship) = collided_entities
-            .iter()
-            .find(|&&&entity| ship_query.get(entity).is_ok())
-        else {
-            continue;
-        };
-        let Some(_asteroid) = collided_entities
-            .iter()
-            .find(|&&&entity| asteroid_query.get(entity).is_ok())
-        else {
-            continue;
-        };
-
-        bevy_commands.entity(**ship).despawn_recursive();
+    for (ship_position, ship_size, ship_entity) in ship_query.iter() {
+        for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
+            let distance =
+                ship_position.distance(**asteroid_position) - (**ship_size) - (**asteroid_size);
+            if distance <= 0. {
+                bevy_commands.entity(ship_entity).despawn_recursive();
+                break;
+            }
+        }
     }
 }
