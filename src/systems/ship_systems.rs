@@ -135,10 +135,12 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
 
 pub fn handle_ship_collisions(
     query: Query<(Option<&Ship>, Option<&Bullet>, Option<&Asteroid>), With<Collidable>>,
+    ship_query: Query<&Ship>,
     mut collision_event: EventReader<Collision>,
     mut bevy_commands: Commands,
 ) {
     for Collision(event_entity, event_other_entity) in collision_event.read() {
+        let is_left_ship = ship_query.get(*event_entity).is_ok();
         let left = query
             .get(*event_entity)
             .expect("extracting componets while handling ship collisions");
