@@ -4,8 +4,8 @@ use bevy::{core::Zeroable, prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     components::{
-        Asteroid, Bullet, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship,
-        Size, Thrust, Velocity,
+        Asteroid, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size,
+        Thrust, Velocity,
     },
     events::Collision,
 };
@@ -134,36 +134,27 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
 }
 
 pub fn handle_ship_collisions(
-    query: Query<(Option<&Ship>, Option<&Bullet>, Option<&Asteroid>), With<Collidable>>,
     ship_query: Query<&Ship>,
+    asteroid_query: Query<&Asteroid>,
     mut collision_event: EventReader<Collision>,
     mut bevy_commands: Commands,
 ) {
-    for Collision(event_entity, event_other_entity) in collision_event.read() {
-        let is_left_ship = ship_query.get(*event_entity).is_ok();
-        let left = query
-            .get(*event_entity)
-            .expect("extracting componets while handling ship collisions");
-        let right = query
-            .get(*event_other_entity)
-            .expect("extracting componets while handling ship collisions");
+    for Collision(entity_a, entity_b) in collision_event.read() {
+        let collided_entities = [entity_a, entity_b];
 
-        match (left, right) {
-            // (Some(&Ship), Some(&Bullet)) => continue,
-            // (Some(&Ship), None) => bevy_commands.entity(*event_entity).despawn_recursive(),
-            // (Some(&Bullet), Some(&Ship)) => continue,
-            // (None, Some(&Ship)) => bevy_commands
-            //     .entity(*event_other_entity)
-            //     .despawn_recursive(),
-            ((Some(&Ship), None, None), (None, None, Some(&Asteroid))) => {
-                bevy_commands.entity(*event_entity).despawn_recursive();
-            }
-            ((None, None, Some(&Asteroid)), (Some(&Ship), None, None)) => {
-                bevy_commands
-                    .entity(*event_other_entity)
-                    .despawn_recursive();
-            }
-            _ => continue,
-        }
+        let Some(ship) = collided_entities
+            .iter()
+            .find(|&&&entity| ship_query.get(entity).is_ok())
+        else {
+            continue;
+        };
+        let Some(_asteroid) = collided_entities
+            .iter()
+            .find(|&&&entity| asteroid_query.get(entity).is_ok())
+        else {
+            continue;
+        };
+
+        bevy_commands.entity(**ship).despawn_recursive();
     }
 }

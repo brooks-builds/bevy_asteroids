@@ -1,7 +1,5 @@
 # Asteroids in Bevy
 
-## Todo
+todo
 
-- [ ] implement a bullet pool
-  - have three bullets in the pool
-  - timer for not firing bullets too often
+- implement https://paste.rs/7i9Ra.rs
