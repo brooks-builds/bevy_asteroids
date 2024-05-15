@@ -2,8 +2,12 @@ use std::time::Duration;
 
 use bevy::{core::Zeroable, prelude::*, sprite::MaterialMesh2dBundle};
 
-use crate::components::{
-    Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Thrust, Velocity,
+use crate::{
+    components::{
+        Asteroid, Bullet, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship,
+        Size, Thrust, Velocity,
+    },
+    events::Collision,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -17,10 +21,11 @@ pub fn add_player(
     materials.insert(NORMAL_SHIP_COLOR_ID, Color::ANTIQUE_WHITE.into());
     materials.insert(THRUSTING_SHIP_COLOR_ID, Color::RED.into());
 
+    let ship_size = Size(30.);
     let ship_mesh = MaterialMesh2dBundle {
         mesh: meshes.add(Triangle2d::default()).into(),
         material: NORMAL_SHIP_COLOR_ID,
-        transform: Transform::default().with_scale(Vec3::splat(50.)),
+        transform: Transform::default().with_scale(Vec3::splat(*ship_size * 2.)),
         ..Default::default()
     };
     let thrust_mesh = MaterialMesh2dBundle {
@@ -49,6 +54,8 @@ pub fn add_player(
         Ship,
         firing,
         firing_timer,
+        Collidable,
+        ship_size,
     ));
 
     ship.add_child(ship_thruster);
@@ -102,7 +109,9 @@ pub fn input_thrust_ship(keyboard_input: Res<ButtonInput<KeyCode>>, mut query: Q
 }
 
 pub fn input_firing(keyboard_input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Firing>) {
-    let mut firing = query.single_mut();
+    let Ok(mut firing) = query.get_single_mut() else {
+        return;
+    };
 
     if keyboard_input.pressed(KeyCode::Space) {
         firing.0 = true;
@@ -120,6 +129,39 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
             let direction = direction.normalize();
 
             velocity.0 += acceleration * direction;
+        }
+    }
+}
+
+pub fn handle_ship_collisions(
+    query: Query<(Option<&Ship>, Option<&Bullet>, Option<&Asteroid>), With<Collidable>>,
+    mut collision_event: EventReader<Collision>,
+    mut bevy_commands: Commands,
+) {
+    for Collision(event_entity, event_other_entity) in collision_event.read() {
+        let left = query
+            .get(*event_entity)
+            .expect("extracting componets while handling ship collisions");
+        let right = query
+            .get(*event_other_entity)
+            .expect("extracting componets while handling ship collisions");
+
+        match (left, right) {
+            // (Some(&Ship), Some(&Bullet)) => continue,
+            // (Some(&Ship), None) => bevy_commands.entity(*event_entity).despawn_recursive(),
+            // (Some(&Bullet), Some(&Ship)) => continue,
+            // (None, Some(&Ship)) => bevy_commands
+            //     .entity(*event_other_entity)
+            //     .despawn_recursive(),
+            ((Some(&Ship), None, None), (None, None, Some(&Asteroid))) => {
+                bevy_commands.entity(*event_entity).despawn_recursive();
+            }
+            ((None, None, Some(&Asteroid)), (Some(&Ship), None, None)) => {
+                bevy_commands
+                    .entity(*event_other_entity)
+                    .despawn_recursive();
+            }
+            _ => continue,
         }
     }
 }

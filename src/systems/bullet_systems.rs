@@ -12,7 +12,9 @@ pub fn fire_bullet(
     bullet_query: Query<&Bullet>,
     time: Res<Time>,
 ) {
-    let mut firing = firing_query.single_mut();
+    let Ok(mut firing) = firing_query.get_single_mut() else {
+        return;
+    };
     let (ship_position, ship_rotation, mut firing_timer, ship_velocity) = ship_query.single_mut();
     let bullets = bullet_query.iter().count();
 
@@ -35,12 +37,13 @@ pub fn fire_bullet(
         return;
     }
 
+    let bullet_size = Size(7.5);
     let bullet_position = ship_position.clone();
     let bullet_mesh = MaterialMesh2dBundle {
         mesh: meshes.add(Circle::default()).into(),
         material: materials.add(Color::WHITE),
         transform: Transform::default()
-            .with_scale(Vec3::splat(15.))
+            .with_scale(Vec3::splat(*bullet_size))
             .with_rotation(ship_rotation.0.clone()),
         ..Default::default()
     };
@@ -60,6 +63,8 @@ pub fn fire_bullet(
         bullet_velocity,
         bullet_mesh,
         bullet_timer,
+        Collidable,
+        bullet_size,
     ));
 }
 
