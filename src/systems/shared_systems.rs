@@ -1,4 +1,6 @@
-use crate::{components::*, events::Collision};
+use std::ops::Deref;
+
+use crate::{components::*, events::Collision, resources::WorldSize};
 use bevy::prelude::*;
 
 pub fn update_positions(mut query: Query<(&mut Transform, &Position)>) {
@@ -14,15 +16,9 @@ pub fn apply_velocity(mut query: Query<(&mut Position, &Velocity)>, time: Res<Ti
     }
 }
 
-pub fn wraparound_entities(
-    mut query: Query<&mut Position>,
-    camera_query: Query<&Camera, With<MainCamera>>,
-) {
-    let camera = camera_query.single();
-    let world_size = camera
-        .logical_viewport_rect()
-        .expect("trying to get viewport size in wraparound entities system")
-        .half_size();
+pub fn wraparound_entities(mut query: Query<&mut Position>, world_size: Res<WorldSize>) {
+    let mut world_size: Vec2 = world_size.deref().into();
+    world_size /= 2.;
 
     for mut position in &mut query {
         if position.0.x > world_size.x {

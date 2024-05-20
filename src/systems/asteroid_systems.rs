@@ -1,3 +1,10 @@
+use std::ops::Deref;
+
+use crate::{
+    components::{Asteroid, Bullet, Collidable, MainCamera, Position, Ship, Size, Velocity},
+    events::Collision,
+    resources::WorldSize,
+};
 use bevy::{prelude::*, render::color};
 use bevy_prototype_lyon::{
     draw::Stroke,
@@ -5,61 +12,71 @@ use bevy_prototype_lyon::{
     geometry::GeometryBuilder,
     shapes::{self, Polygon},
 };
-use rand::{thread_rng, Rng};
-
-use crate::{
-    components::{Asteroid, Bullet, Collidable, MainCamera, Position, Ship, Size, Velocity},
-    events::Collision,
-};
+use rand::{rngs::ThreadRng, thread_rng, Rng};
 
 pub fn spawn_asteroids(
     mut commands: Commands,
-    asteroids: Query<&Asteroid>,
-    camera_query: Query<&Camera, With<MainCamera>>,
+    world_size: Res<WorldSize>,
+    ship_query: Query<(&Position, &Size), With<Ship>>,
 ) {
-    if asteroids.iter().count() > 0 {
-        return;
-    }
+    let (ship_position, ship_size) = ship_query.single();
 
-    let camera = camera_query.single();
-    let world_size = camera
-        .logical_viewport_rect()
-        .expect("trying to get viewport size in wraparound entities system")
-        .half_size();
-    let asteroids_count = 1;
+    let world_size: Vec2 = world_size.deref().into();
+    let desired_asteroids = 1;
     let mut rng = thread_rng();
-    let asteroid_speed = 15.;
+    let mut created_asteroids = 0;
+    let size = Size::from_scale(2.);
 
-    for _ in 0..asteroids_count {
-        let (shape, size) = create_asteroid_shape(2.);
+    loop {
         let position = Position(Vec3 {
             x: rng.gen_range(-world_size.x..world_size.x),
             y: rng.gen_range(-world_size.y..world_size.y),
             z: 0.,
         });
-        let velocity =
-            Vec2::from_angle(rng.gen_range(0.0..std::f32::consts::TAU)).extend(0.) * asteroid_speed;
 
-        commands.spawn((
-            ShapeBundle {
-                path: GeometryBuilder::build_as(&shape),
-                ..Default::default()
-            },
-            Stroke::new(color::Color::ANTIQUE_WHITE, 2.),
-            Asteroid,
-            position,
-            Velocity(velocity),
-            Collidable,
-            size,
-        ));
+        let distance_to_ship = position.distance(**ship_position);
+
+        if distance_to_ship < *size * 2. {
+            continue;
+        }
+
+        spawn_asteroid(&mut commands, 2., &mut rng, position);
+        created_asteroids += 1;
+
+        if created_asteroids >= desired_asteroids {
+            break;
+        }
     }
+}
+
+fn spawn_asteroid(commands: &mut Commands, scale: f32, rng: &mut ThreadRng, position: Position) {
+    // scale = 2.0 == 15
+    // scale = 1.0 == 30
+    // scale = 0.5 == 60
+    let asteroid_speed = rng.gen_range(29.0..31.0) / scale;
+    let (shape, size) = create_asteroid_shape(scale);
+    let velocity =
+        Vec2::from_angle(rng.gen_range(0.0..std::f32::consts::TAU)).extend(0.) * asteroid_speed;
+
+    commands.spawn((
+        ShapeBundle {
+            path: GeometryBuilder::build_as(&shape),
+            ..Default::default()
+        },
+        Stroke::new(color::Color::ANTIQUE_WHITE, 2.),
+        Asteroid,
+        position,
+        Velocity(velocity),
+        Collidable,
+        size,
+    ));
 }
 
 fn create_asteroid_shape(scale: f32) -> (Polygon, Size) {
     let mut rng = thread_rng();
     let mut points = vec![];
     let point_count = 25.;
-    let size = Size(65. * scale);
+    let size = Size::from_scale(scale);
 
     for i in 0..point_count as u8 {
         let angle = i as f32 * std::f32::consts::TAU / point_count;
@@ -82,7 +99,7 @@ fn create_asteroid_shape(scale: f32) -> (Polygon, Size) {
 
 pub fn handle_collisions(
     bullet_query: Query<&Bullet>,
-    asteroid_query: Query<&Asteroid>,
+    asteroid_query: Query<(&Asteroid, &Size, Entity, &Position)>,
     mut commands: Commands,
     mut collision_events: EventReader<Collision>,
 ) {
@@ -94,15 +111,24 @@ pub fn handle_collisions(
         else {
             continue;
         };
-        let Some(&asteroid) = collided_entities
-            .into_iter()
-            .find(|&&entity| asteroid_query.get(entity).is_ok())
+        let Some((_asteroid, asteroid_size, asteroid_entity, asteroid_position)) =
+            collided_entities
+                .into_iter()
+                .find_map(|&entity| asteroid_query.get(entity).ok())
         else {
             continue;
         };
-
-        commands.entity(asteroid).despawn();
+        commands.entity(asteroid_entity).despawn();
         commands.entity(bullet).despawn();
+        // create 2 asteroids
+
+        let mut rng = thread_rng();
+
+        let scale = asteroid_size.to_scale() / 2.;
+        if scale > 0.1 {
+            spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
+            spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
+        }
     }
 }
 

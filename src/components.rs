@@ -58,3 +58,13 @@ pub struct Collidable;
 
 #[derive(Component, Deref, DerefMut)]
 pub struct Size(pub f32);
+
+impl Size {
+    pub fn from_scale(scale: f32) -> Self {
+        Self(65. * scale)
+    }
+
+    pub fn to_scale(&self) -> f32 {
+        **self / 65.
+    }
+}
