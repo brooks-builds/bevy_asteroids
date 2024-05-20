@@ -68,3 +68,6 @@ impl Size {
         **self / 65.
     }
 }
+
+#[derive(Component)]
+pub struct Explosion;

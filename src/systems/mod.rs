@@ -2,5 +2,6 @@ pub mod asteroid_systems;
 pub mod bullet_systems;
 pub mod camera_systems;
 pub mod debug_systems;
+pub mod explosion;
 pub mod shared_systems;
 pub mod ship_systems;

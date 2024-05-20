@@ -1,8 +1,6 @@
-use std::ops::Deref;
-
 use crate::{
-    components::{Asteroid, Bullet, Collidable, MainCamera, Position, Ship, Size, Velocity},
-    events::Collision,
+    components::{Asteroid, Bullet, Collidable, Position, Ship, Size, Velocity},
+    events::{Collision, ExplosionEvent},
     resources::WorldSize,
 };
 use bevy::{prelude::*, render::color};
@@ -13,13 +11,14 @@ use bevy_prototype_lyon::{
     shapes::{self, Polygon},
 };
 use rand::{rngs::ThreadRng, thread_rng, Rng};
+use std::ops::Deref;
 
 pub fn spawn_asteroids(
     mut commands: Commands,
     world_size: Res<WorldSize>,
-    ship_query: Query<(&Position, &Size), With<Ship>>,
+    ship_query: Query<&Position, With<Ship>>,
 ) {
-    let (ship_position, ship_size) = ship_query.single();
+    let ship_position = ship_query.single();
 
     let world_size: Vec2 = world_size.deref().into();
     let desired_asteroids = 1;
@@ -102,6 +101,7 @@ pub fn handle_collisions(
     asteroid_query: Query<(&Asteroid, &Size, Entity, &Position)>,
     mut commands: Commands,
     mut collision_events: EventReader<Collision>,
+    mut explosion_event: EventWriter<ExplosionEvent>,
 ) {
     for Collision(collided_a, collided_b) in collision_events.read() {
         let collided_entities = [collided_a, collided_b];
@@ -120,6 +120,8 @@ pub fn handle_collisions(
         };
         commands.entity(asteroid_entity).despawn();
         commands.entity(bullet).despawn();
+
+        explosion_event.send(ExplosionEvent(asteroid_position.clone()));
         // create 2 asteroids
 
         let mut rng = thread_rng();
@@ -138,6 +140,7 @@ pub fn handle_ship_collisions(
     asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
     ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
     mut bevy_commands: Commands,
+    mut explosion_event: EventWriter<ExplosionEvent>,
 ) {
     for (ship_position, ship_size, ship_entity) in ship_query.iter() {
         for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
@@ -145,6 +148,7 @@ pub fn handle_ship_collisions(
                 ship_position.distance(**asteroid_position) - (**ship_size) - (**asteroid_size);
             if distance <= 0. {
                 bevy_commands.entity(ship_entity).despawn_recursive();
+                explosion_event.send(ExplosionEvent(ship_position.clone()));
             }
         }
     }

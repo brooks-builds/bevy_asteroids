@@ -5,7 +5,7 @@ mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use events::Collision;
+use events::{Collision, ExplosionEvent};
 use resources::WorldSize;
 
 pub fn run() {
@@ -19,6 +19,7 @@ struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.add_event::<Collision>();
+        app.add_event::<ExplosionEvent>();
         app.insert_resource(WorldSize(1920., 1080.));
         app.add_systems(
             Startup,
@@ -48,6 +49,9 @@ impl Plugin for Game {
                     // systems::debug_systems::visualize_size,
                     systems::ship_systems::handle_ship_collisions,
                     systems::asteroid_systems::handle_collisions,
+                    systems::explosion::handle_explosion_event,
+                    systems::explosion::remove_explosion,
+                    systems::explosion::update_explosion,
                 )
                     .chain(),
             ),

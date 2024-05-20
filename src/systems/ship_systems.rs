@@ -7,7 +7,7 @@ use crate::{
         Asteroid, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size,
         Thrust, Velocity,
     },
-    events::Collision,
+    events::{Collision, ExplosionEvent},
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -134,17 +134,18 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
 }
 
 pub fn handle_ship_collisions(
-    ship_query: Query<&Ship>,
+    ship_query: Query<(&Position, Entity), With<Ship>>,
     asteroid_query: Query<&Asteroid>,
     mut collision_event: EventReader<Collision>,
     mut bevy_commands: Commands,
+    mut explosion_event: EventWriter<ExplosionEvent>,
 ) {
     for Collision(entity_a, entity_b) in collision_event.read() {
         let collided_entities = [entity_a, entity_b];
 
-        let Some(ship) = collided_entities
+        let Some((ship_position, ship)) = collided_entities
             .iter()
-            .find(|&&&entity| ship_query.get(entity).is_ok())
+            .find_map(|&&entity| ship_query.get(entity).ok())
         else {
             continue;
         };
@@ -155,6 +156,8 @@ pub fn handle_ship_collisions(
             continue;
         };
 
-        bevy_commands.entity(**ship).despawn_recursive();
+        bevy_commands.entity(ship).despawn_recursive();
+
+        explosion_event.send(ExplosionEvent(ship_position.clone()));
     }
 }
