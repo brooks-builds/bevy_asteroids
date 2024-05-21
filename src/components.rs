@@ -5,7 +5,7 @@ use bevy::{
     time::Timer,
 };
 
-#[derive(Component, Clone, Debug, Deref, DerefMut, Copy)]
+#[derive(Component, Clone, Debug, Deref, DerefMut, Copy, Default)]
 pub struct Position(pub Vec3);
 
 impl From<&Position> for Vec2 {
@@ -71,3 +71,6 @@ impl Size {
 
 #[derive(Component)]
 pub struct Explosion;
+
+#[derive(Component)]
+pub struct UI;

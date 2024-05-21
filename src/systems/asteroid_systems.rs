@@ -1,7 +1,7 @@
 use crate::{
     components::{Asteroid, Bullet, Collidable, Position, Ship, Size, Velocity},
     events::{Collision, ExplosionEvent},
-    resources::WorldSize,
+    resources::{AsteroidCount, WorldSize},
 };
 use bevy::{prelude::*, render::color};
 use bevy_prototype_lyon::{
@@ -17,32 +17,37 @@ pub fn spawn_asteroids(
     mut commands: Commands,
     world_size: Res<WorldSize>,
     ship_query: Query<&Position, With<Ship>>,
+    desired_asteroids: Res<AsteroidCount>,
 ) {
-    let ship_position = ship_query.single();
+    let ship_position = ship_query.iter().next();
 
     let world_size: Vec2 = world_size.deref().into();
-    let desired_asteroids = 1;
     let mut rng = thread_rng();
     let mut created_asteroids = 0;
     let size = Size::from_scale(2.);
 
+    let half_width = world_size.x / 2.;
+    let half_height = world_size.y / 2.;
+
     loop {
         let position = Position(Vec3 {
-            x: rng.gen_range(-world_size.x..world_size.x),
-            y: rng.gen_range(-world_size.y..world_size.y),
+            x: rng.gen_range(-half_width..half_width),
+            y: rng.gen_range(-half_height..half_height),
             z: 0.,
         });
 
-        let distance_to_ship = position.distance(**ship_position);
+        if let Some(ship_position) = ship_position {
+            let distance_to_ship = position.distance(**ship_position);
 
-        if distance_to_ship < *size * 2. {
-            continue;
-        }
+            if distance_to_ship < *size * 2. {
+                continue;
+            }
+        };
 
         spawn_asteroid(&mut commands, 2., &mut rng, position);
         created_asteroids += 1;
 
-        if created_asteroids >= desired_asteroids {
+        if created_asteroids >= **desired_asteroids {
             break;
         }
     }

@@ -1,6 +1,11 @@
 use std::ops::Deref;
 
-use crate::{components::*, events::Collision, resources::WorldSize};
+use crate::{
+    components::*,
+    events::Collision,
+    resources::{AsteroidCount, WorldSize},
+    states::GameState,
+};
 use bevy::prelude::*;
 
 pub fn update_positions(mut query: Query<(&mut Transform, &Position)>) {
@@ -47,5 +52,39 @@ pub fn detect_collisions(
                 collision_event.send(Collision(entity, other_entity));
             }
         }
+    }
+}
+
+pub fn transition_states(
+    mut keyboard_input: ResMut<ButtonInput<KeyCode>>,
+    current_game_state: Res<State<GameState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    if keyboard_input.clear_just_pressed(KeyCode::Space) {
+        match current_game_state.get() {
+            GameState::Starting => next_game_state.set(GameState::GetReady),
+            GameState::GetReady => unreachable!(),
+            GameState::Playing => unreachable!(),
+            GameState::GameOver => next_game_state.set(GameState::Starting),
+            GameState::Boss => todo!(),
+        };
+    }
+}
+
+pub fn reset_game(
+    mut asteroid_count: ResMut<AsteroidCount>,
+    mut asteroids_query: Query<Entity, With<Asteroid>>,
+    mut commands: Commands,
+) {
+    asteroid_count.0 = 1;
+
+    for asteroid in &mut asteroids_query {
+        commands.entity(asteroid).despawn();
+    }
+}
+
+pub fn reset_ui(query: Query<Entity, With<UI>>, mut commands: Commands) {
+    for ui in &query {
+        commands.entity(ui).despawn();
     }
 }

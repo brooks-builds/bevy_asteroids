@@ -1,12 +1,14 @@
 mod components;
 pub mod events;
 mod resources;
+mod states;
 mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
 use events::{Collision, ExplosionEvent};
-use resources::WorldSize;
+use resources::{AsteroidCount, WorldSize};
+use states::GameState;
 
 pub fn run() {
     App::new()
@@ -21,39 +23,76 @@ impl Plugin for Game {
         app.add_event::<Collision>();
         app.add_event::<ExplosionEvent>();
         app.insert_resource(WorldSize(1920., 1080.));
+        app.insert_resource(AsteroidCount(10));
+        app.insert_state(GameState::Starting);
+
         app.add_systems(
             Startup,
             (
-                systems::ship_systems::add_player,
                 systems::camera_systems::add_camera,
+                systems::camera_systems::add_camera_border,
             ),
         );
-        app.add_systems(PostStartup, (systems::asteroid_systems::spawn_asteroids,));
+
+        app.add_systems(
+            OnEnter(GameState::Starting),
+            (
+                systems::asteroid_systems::spawn_asteroids,
+                systems::ui::title_screen,
+            ),
+        );
+
+        app.add_systems(
+            OnExit(GameState::Starting),
+            (
+                systems::shared_systems::reset_game,
+                systems::shared_systems::reset_ui,
+            ),
+        );
+
+        app.add_systems(
+            OnEnter(GameState::GetReady),
+            (
+                systems::ship_systems::add_player,
+                systems::asteroid_systems::spawn_asteroids.after(systems::ship_systems::add_player),
+                systems::shared_systems::update_positions
+                    .after(systems::asteroid_systems::spawn_asteroids),
+            ),
+        );
+
         app.add_systems(
             Update,
             (
-                systems::ship_systems::change_thruster_colors,
                 (
-                    systems::camera_systems::update_world_size,
-                    systems::ship_systems::input_rotate_ship,
-                    systems::ship_systems::rotate_ship,
-                    systems::ship_systems::input_thrust_ship,
-                    systems::ship_systems::apply_thrust,
                     systems::shared_systems::apply_velocity,
-                    systems::shared_systems::wraparound_entities,
-                    systems::ship_systems::input_firing,
-                    systems::bullet_systems::fire_bullet,
                     systems::shared_systems::update_positions,
-                    systems::bullet_systems::delete_expired_bullets,
-                    systems::shared_systems::detect_collisions,
-                    // systems::debug_systems::visualize_size,
-                    systems::ship_systems::handle_ship_collisions,
-                    systems::asteroid_systems::handle_collisions,
-                    systems::explosion::handle_explosion_event,
-                    systems::explosion::remove_explosion,
-                    systems::explosion::update_explosion,
+                    systems::shared_systems::wraparound_entities,
+                    systems::shared_systems::transition_states,
                 )
-                    .chain(),
+                    .run_if(in_state(GameState::Starting)),
+                // ().run_if(in_state(GameState::Playing).and_then(in_state(PlayingState::GetReady))),
+                (
+                    systems::ship_systems::change_thruster_colors,
+                    (
+                        systems::ship_systems::input_rotate_ship,
+                        systems::ship_systems::rotate_ship,
+                        systems::ship_systems::input_thrust_ship,
+                        systems::ship_systems::apply_thrust,
+                        systems::shared_systems::apply_velocity,
+                        systems::ship_systems::input_firing,
+                        systems::bullet_systems::fire_bullet,
+                        systems::bullet_systems::delete_expired_bullets,
+                        systems::shared_systems::detect_collisions,
+                        // systems::debug_systems::visualize_size,
+                        systems::ship_systems::handle_ship_collisions,
+                        systems::asteroid_systems::handle_collisions,
+                        systems::explosion::handle_explosion_event,
+                        systems::explosion::remove_explosion,
+                        systems::explosion::update_explosion,
+                    )
+                        .chain(),
+                )
+                    .run_if(in_state(GameState::Playing)),
             ),
         );
     }

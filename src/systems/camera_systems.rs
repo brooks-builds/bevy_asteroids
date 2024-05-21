@@ -1,19 +1,32 @@
+use crate::components::MainCamera;
 use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy_prototype_lyon::{draw::Stroke, entity::ShapeBundle, geometry::GeometryBuilder, shapes};
 
-use crate::{components::MainCamera, resources::WorldSize};
+pub const WORLD_WIDTH: f32 = 1920.0;
+pub const WORLD_HEIGHT: f32 = 1080.0;
 
 pub fn add_camera(mut commands: Commands) {
     let mut camera = Camera2dBundle::default();
 
-    camera.projection.scaling_mode = ScalingMode::WindowSize(1.0);
+    camera.projection.scaling_mode = ScalingMode::AutoMin {
+        min_width: WORLD_WIDTH,
+        min_height: WORLD_HEIGHT,
+    };
 
     commands.spawn((camera, MainCamera));
 }
 
-pub fn update_world_size(camera_query: Query<&Camera>, mut world_size: ResMut<WorldSize>) {
-    let camera = camera_query.single();
-    let camera_size = camera.logical_viewport_rect().unwrap_or_default().size();
+pub fn add_camera_border(mut commands: Commands) {
+    let outline = shapes::Rectangle {
+        extents: Vec2::new(WORLD_WIDTH, WORLD_HEIGHT),
+        origin: shapes::RectangleOrigin::Center,
+    };
 
-    world_size.0 = camera_size.x;
-    world_size.1 = camera_size.y;
+    commands.spawn((
+        ShapeBundle {
+            path: GeometryBuilder::build_as(&outline),
+            ..Default::default()
+        },
+        Stroke::new(Color::ANTIQUE_WHITE, 5.),
+    ));
 }
