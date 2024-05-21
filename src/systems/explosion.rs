@@ -28,11 +28,18 @@ pub fn handle_explosion_event(
     }
 }
 
-pub fn update_explosion(mut explosion_query: Query<(&mut Transform, &Position, &mut Stroke), With<Explosion>>) {
+pub fn update_explosion(
+    mut explosion_query: Query<(&mut Transform, &Position, &mut Stroke), With<Explosion>>,
+) {
     for (mut transform, position, mut stroke) in &mut explosion_query {
-        transform.scale *= 1.1;
+        transform.scale *= 1.05;
         transform.translation = **position;
-        transform.
+
+        let line_width = (stroke.options.line_width - 0.15).clamp(0., 5.);
+        stroke.options.line_width = line_width;
+
+        let alpha = (stroke.color.a() - 0.03).clamp(0., 100.);
+        stroke.color = stroke.color.with_a(alpha);
     }
 }
 

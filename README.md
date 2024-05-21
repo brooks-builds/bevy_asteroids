@@ -6,4 +6,4 @@ todo
 - [ ] Review PR
 - [x] Shooting an asteroid turns it into 2 smaller asteroids
 - [x] When asteroids spawn, they don't immediately kill the ship
-- [ ] When something dies, it explodes
+- [x] When something dies, it explodes
