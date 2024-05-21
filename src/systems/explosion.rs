@@ -43,4 +43,14 @@ pub fn update_explosion(
     }
 }
 
-pub fn remove_explosion() {}
+pub fn remove_explosion(
+    explosion_query: Query<(&Stroke, Entity), With<Explosion>>,
+    mut commands: Commands,
+) {
+    for (stroke, entity) in &explosion_query {
+        let alpha = stroke.color.a();
+        if alpha <= 0. {
+            commands.entity(entity).despawn();
+        }
+    }
+}
