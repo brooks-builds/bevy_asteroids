@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use crate::{
     components::*,
-    resources::{AsteroidCount, Countdown, WorldSize},
+    resources::{AsteroidCount, BeforeBossState, Countdown, WorldSize},
     states::GameState,
 };
 use bevy::prelude::*;
@@ -105,4 +105,23 @@ pub fn transition_from_playing_to_game_over(
     }
 
     next_game_state.set(GameState::GameOver);
+}
+
+pub fn to_from_boss(
+    current_game_state: Res<State<GameState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut keyboard_input: ResMut<ButtonInput<KeyCode>>,
+    mut before_boss_state: ResMut<BeforeBossState>,
+) {
+    if keyboard_input.clear_just_pressed(KeyCode::KeyB) {
+        match current_game_state.get() {
+            GameState::Boss => next_game_state.set(**before_boss_state),
+            GameState::GetReady => (),
+            _ => {
+                before_boss_state.0 = *current_game_state.get();
+                next_game_state.set(GameState::Boss);
+                open::that("https://updatefaker.com/").ok();
+            }
+        }
+    }
 }

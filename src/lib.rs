@@ -7,7 +7,7 @@ mod systems;
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
 use events::ExplosionEvent;
-use resources::{AsteroidCount, Countdown, WorldSize};
+use resources::{AsteroidCount, BeforeBossState, Countdown, WorldSize};
 use states::GameState;
 
 const GET_READY_TIME: f32 = 4.;
@@ -23,12 +23,15 @@ struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.add_event::<ExplosionEvent>();
+
         app.insert_resource(WorldSize(1920., 1080.));
         app.insert_resource(AsteroidCount(10));
+        app.insert_resource(BeforeBossState(GameState::Starting));
         app.insert_resource(Countdown(Timer::from_seconds(
             GET_READY_TIME,
             TimerMode::Once,
         )));
+
         app.insert_state(GameState::Starting);
 
         app.add_systems(
@@ -121,6 +124,7 @@ impl Plugin for Game {
                     systems::explosion::remove_explosion,
                 )
                     .run_if(in_state(GameState::GameOver)),
+                (systems::shared_systems::to_from_boss,),
             ),
         );
 

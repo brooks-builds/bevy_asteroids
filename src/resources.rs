@@ -5,6 +5,8 @@ use bevy::{
     time::Timer,
 };
 
+use crate::states::GameState;
+
 #[derive(Resource, Debug)]
 pub struct WorldSize(pub f32, pub f32);
 
@@ -22,3 +24,6 @@ pub struct AsteroidCount(pub u8);
 
 #[derive(Resource, Debug, Deref, DerefMut)]
 pub struct Countdown(pub Timer);
+
+#[derive(Resource, Debug, Deref, DerefMut)]
+pub struct BeforeBossState(pub GameState);
