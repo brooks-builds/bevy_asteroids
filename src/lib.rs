@@ -6,7 +6,7 @@ mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use events::{Collision, ExplosionEvent};
+use events::ExplosionEvent;
 use resources::{AsteroidCount, Countdown, WorldSize};
 use states::GameState;
 
@@ -22,7 +22,6 @@ struct Game;
 
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
-        app.add_event::<Collision>();
         app.add_event::<ExplosionEvent>();
         app.insert_resource(WorldSize(1920., 1080.));
         app.insert_resource(AsteroidCount(10));
@@ -103,7 +102,6 @@ impl Plugin for Game {
                         systems::ship_systems::input_firing,
                         systems::bullet_systems::fire_bullet,
                         systems::bullet_systems::delete_expired_bullets,
-                        systems::shared_systems::detect_collisions,
                         // systems::debug_systems::visualize_size,
                         systems::ship_systems::handle_ship_collisions,
                         systems::asteroid_systems::handle_collisions,

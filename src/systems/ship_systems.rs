@@ -7,7 +7,7 @@ use crate::{
         Asteroid, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size,
         Thrust, Velocity,
     },
-    events::{Collision, ExplosionEvent},
+    events::ExplosionEvent,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -134,30 +134,20 @@ pub fn apply_thrust(mut query: Query<(&Thrust, &mut Velocity, &Transform)>) {
 }
 
 pub fn handle_ship_collisions(
-    ship_query: Query<(&Position, Entity), With<Ship>>,
-    asteroid_query: Query<&Asteroid>,
-    mut collision_event: EventReader<Collision>,
+    asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
+    ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
     mut bevy_commands: Commands,
     mut explosion_event: EventWriter<ExplosionEvent>,
 ) {
-    for Collision(entity_a, entity_b) in collision_event.read() {
-        let collided_entities = [entity_a, entity_b];
+    for (ship_position, ship_size, ship_entity) in ship_query.iter() {
+        for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
+            if ship_position.distance(**asteroid_position) > **ship_size + **asteroid_size {
+                continue;
+            }
 
-        let Some((ship_position, ship)) = collided_entities
-            .iter()
-            .find_map(|&&entity| ship_query.get(entity).ok())
-        else {
-            continue;
-        };
-        let Some(_asteroid) = collided_entities
-            .iter()
-            .find(|&&&entity| asteroid_query.get(entity).is_ok())
-        else {
-            continue;
-        };
+            bevy_commands.entity(ship_entity).despawn_recursive();
 
-        bevy_commands.entity(ship).despawn_recursive();
-
-        explosion_event.send(ExplosionEvent(ship_position.clone()));
+            explosion_event.send(ExplosionEvent(ship_position.clone()));
+        }
     }
 }
