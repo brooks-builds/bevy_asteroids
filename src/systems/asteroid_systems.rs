@@ -1,6 +1,6 @@
 use crate::{
     components::{Asteroid, Bullet, Collidable, Position, Ship, Size, Velocity},
-    events::{Collision, ExplosionEvent},
+    events::ExplosionEvent,
     resources::{AsteroidCount, WorldSize},
 };
 use bevy::{prelude::*, render::color};
@@ -102,39 +102,31 @@ fn create_asteroid_shape(scale: f32) -> (Polygon, Size) {
 }
 
 pub fn handle_collisions(
-    bullet_query: Query<&Bullet>,
-    asteroid_query: Query<(&Asteroid, &Size, Entity, &Position)>,
+    asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
+    bullet_query: Query<(&Position, &Size, Entity), With<Bullet>>,
     mut commands: Commands,
-    mut collision_events: EventReader<Collision>,
     mut explosion_event: EventWriter<ExplosionEvent>,
 ) {
-    for Collision(collided_a, collided_b) in collision_events.read() {
-        let collided_entities = [collided_a, collided_b];
-        let Some(&bullet) = collided_entities
-            .into_iter()
-            .find(|&&entity| bullet_query.get(entity).is_ok())
-        else {
-            continue;
-        };
-        let Some((_asteroid, asteroid_size, asteroid_entity, asteroid_position)) =
-            collided_entities
-                .into_iter()
-                .find_map(|&entity| asteroid_query.get(entity).ok())
-        else {
-            continue;
-        };
-        commands.entity(asteroid_entity).despawn();
-        commands.entity(bullet).despawn();
+    for (bullet_position, bullet_size, bullet_entity) in bullet_query.iter() {
+        for (asteroid_position, asteroid_size, asteroid_entity) in asteroid_query.iter() {
+            if bullet_position.distance(**asteroid_position) > **bullet_size + **asteroid_size {
+                continue;
+            }
+            commands.entity(asteroid_entity).despawn();
+            commands.entity(bullet_entity).despawn();
 
-        explosion_event.send(ExplosionEvent(asteroid_position.clone()));
-        // create 2 asteroids
+            explosion_event.send(ExplosionEvent(asteroid_position.clone()));
+            // create 2 asteroids
 
-        let mut rng = thread_rng();
+            let mut rng = thread_rng();
 
-        let scale = asteroid_size.to_scale() / 2.;
-        if scale > 0.1 {
-            spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
-            spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
+            let scale = asteroid_size.to_scale() / 2.;
+            if scale > 0.1 {
+                spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
+                spawn_asteroid(&mut commands, scale, &mut rng, asteroid_position.clone());
+            }
+
+            break; // Each bullet can only hit one asteroid
         }
     }
 }
@@ -149,11 +141,10 @@ pub fn handle_ship_collisions(
 ) {
     for (ship_position, ship_size, ship_entity) in ship_query.iter() {
         for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
-            let distance =
-                ship_position.distance(**asteroid_position) - (**ship_size) - (**asteroid_size);
-            if distance <= 0. {
+            if ship_position.distance(**asteroid_position) <= **ship_size + **asteroid_size {
                 bevy_commands.entity(ship_entity).despawn_recursive();
                 explosion_event.send(ExplosionEvent(ship_position.clone()));
+                break; // Each ship can only hit one asteroid
             }
         }
     }
