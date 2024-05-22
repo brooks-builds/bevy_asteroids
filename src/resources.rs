@@ -2,6 +2,7 @@ use bevy::{
     ecs::system::Resource,
     math::Vec2,
     prelude::{Deref, DerefMut},
+    time::Timer,
 };
 
 #[derive(Resource, Debug)]
@@ -18,3 +19,6 @@ impl From<&WorldSize> for Vec2 {
 
 #[derive(Resource, Debug, Deref, DerefMut)]
 pub struct AsteroidCount(pub u8);
+
+#[derive(Resource, Debug, Deref, DerefMut)]
+pub struct Countdown(pub Timer);

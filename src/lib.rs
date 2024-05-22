@@ -7,8 +7,10 @@ mod systems;
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
 use events::{Collision, ExplosionEvent};
-use resources::{AsteroidCount, WorldSize};
+use resources::{AsteroidCount, Countdown, WorldSize};
 use states::GameState;
+
+const GET_READY_TIME: f32 = 4.;
 
 pub fn run() {
     App::new()
@@ -24,6 +26,10 @@ impl Plugin for Game {
         app.add_event::<ExplosionEvent>();
         app.insert_resource(WorldSize(1920., 1080.));
         app.insert_resource(AsteroidCount(10));
+        app.insert_resource(Countdown(Timer::from_seconds(
+            GET_READY_TIME,
+            TimerMode::Once,
+        )));
         app.insert_state(GameState::Starting);
 
         app.add_systems(
@@ -57,6 +63,8 @@ impl Plugin for Game {
                 systems::asteroid_systems::spawn_asteroids.after(systems::ship_systems::add_player),
                 systems::shared_systems::update_positions
                     .after(systems::asteroid_systems::spawn_asteroids),
+                systems::shared_systems::reset_countdown,
+                systems::ui::get_ready_screen,
             ),
         );
 
@@ -70,7 +78,11 @@ impl Plugin for Game {
                     systems::shared_systems::transition_states,
                 )
                     .run_if(in_state(GameState::Starting)),
-                // ().run_if(in_state(GameState::Playing).and_then(in_state(PlayingState::GetReady))),
+                (
+                    systems::shared_systems::tick_countdown,
+                    systems::ui::update_get_ready_screen,
+                )
+                    .run_if(in_state(GameState::GetReady)),
                 (
                     systems::ship_systems::change_thruster_colors,
                     (

@@ -3,7 +3,7 @@ use std::ops::Deref;
 use crate::{
     components::*,
     events::Collision,
-    resources::{AsteroidCount, WorldSize},
+    resources::{AsteroidCount, Countdown, WorldSize},
     states::GameState,
 };
 use bevy::prelude::*;
@@ -87,4 +87,12 @@ pub fn reset_ui(query: Query<Entity, With<UI>>, mut commands: Commands) {
     for ui in &query {
         commands.entity(ui).despawn();
     }
+}
+
+pub fn reset_countdown(mut countdown: ResMut<Countdown>) {
+    countdown.reset();
+}
+
+pub fn tick_countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
+    countdown.tick(time.delta());
 }
