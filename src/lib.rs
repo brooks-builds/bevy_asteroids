@@ -43,6 +43,7 @@ impl Plugin for Game {
                 systems::camera_systems::add_camera,
                 systems::camera_systems::add_camera_border,
                 systems::ui::display_score,
+                systems::shared_systems::load_high_score.after(systems::ui::display_score),
             ),
         );
 
@@ -60,6 +61,11 @@ impl Plugin for Game {
                 systems::shared_systems::reset_game,
                 systems::shared_systems::reset_ui,
             ),
+        );
+
+        app.add_systems(
+            OnExit(GameState::Playing),
+            (systems::shared_systems::save_high_score,),
         );
 
         app.add_systems(

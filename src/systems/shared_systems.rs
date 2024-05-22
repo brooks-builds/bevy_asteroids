@@ -7,6 +7,7 @@ use crate::{
     states::GameState,
 };
 use bevy::prelude::*;
+use directories::ProjectDirs;
 
 pub fn update_positions(mut query: Query<(&mut Transform, &Position)>) {
     for (mut transform, position) in &mut query {
@@ -136,5 +137,38 @@ pub fn update_scores(
         **score += value;
 
         **high_score = high_score.max(**score);
+    }
+}
+
+pub fn save_high_score(high_score: Res<HighScore>) {
+    if let Some(project_directory) = ProjectDirs::from("com", "brooksbuilds", "bevy_asteroids") {
+        let directory_path = project_directory.data_dir();
+        let path = directory_path.join("high_score");
+
+        println!(
+            "Creating directory if it doesn't exist: {:?}",
+            directory_path
+        );
+        if let Err(error) = std::fs::create_dir_all(directory_path) {
+            eprintln!("There was an error creating the data directory: {error:?}");
+        }
+
+        println!("Saving high score to: {:?}", path);
+        if let Err(error) = std::fs::write(path, String::from(*high_score)) {
+            eprintln!("There was an error saving your high score :( : {error:?}");
+        }
+    }
+}
+
+pub fn load_high_score(mut high_score: ResMut<HighScore>) {
+    if let Some(project_directory) = ProjectDirs::from("com", "brooksbuilds", "bevy_asteroids") {
+        let directory_path = project_directory.data_dir();
+        let path = directory_path.join("high_score");
+
+        println!("loading high score from: {:?}", path);
+        match std::fs::read_to_string(path) {
+            Ok(saved_high_score) => **high_score = saved_high_score.parse().unwrap_or_default(),
+            Err(error) => eprintln!("There was an error saving your high score :( : {error:?}"),
+        }
     }
 }

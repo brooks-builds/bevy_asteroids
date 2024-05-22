@@ -19,8 +19,10 @@ todo
   - [x] display score on screen
   - [x] track high score in resource
   - [x] display high score
-  - [ ] save high score on game over
-  - [ ] load high score on startup
+  - [x] save high score on game over
+  - [x] load high score on startup
+  - [ ] update game over screen with correct score
+- [ ] After destroying all asteroids, level increases
 - [ ] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style
 - [ ] ufo
