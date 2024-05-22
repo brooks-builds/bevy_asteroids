@@ -130,22 +130,3 @@ pub fn handle_collisions(
         }
     }
 }
-
-#[allow(unused)]
-/// From @rasmusgo1 on Twitch
-pub fn handle_ship_collisions(
-    asteroid_query: Query<(&Position, &Size, Entity), With<Asteroid>>,
-    ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
-    mut bevy_commands: Commands,
-    mut explosion_event: EventWriter<ExplosionEvent>,
-) {
-    for (ship_position, ship_size, ship_entity) in ship_query.iter() {
-        for (asteroid_position, asteroid_size, _asteroid_entity) in asteroid_query.iter() {
-            if ship_position.distance(**asteroid_position) <= **ship_size + **asteroid_size {
-                bevy_commands.entity(ship_entity).despawn_recursive();
-                explosion_event.send(ExplosionEvent(ship_position.clone()));
-                break; // Each ship can only hit one asteroid
-            }
-        }
-    }
-}

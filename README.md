@@ -20,5 +20,5 @@ todo
   - [ ] track high score in resource
   - [ ] display high score
 - [ ] teleport ship
-- [ ] rewrite collision system to use Rasmusgo's style
+- [x] rewrite collision system to use Rasmusgo's style
 - [ ] ufo

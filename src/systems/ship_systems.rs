@@ -146,8 +146,8 @@ pub fn handle_ship_collisions(
             }
 
             bevy_commands.entity(ship_entity).despawn_recursive();
-
             explosion_event.send(ExplosionEvent(ship_position.clone()));
+            break;
         }
     }
 }
