@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::component::Component,
+    ecs::{component::Component, query::QueryFilter},
     math::{bounding::BoundingCircle, Quat, Vec3},
     prelude::{Deref, DerefMut, Vec2},
     time::Timer,
@@ -74,3 +74,6 @@ pub struct Explosion;
 
 #[derive(Component)]
 pub struct UI;
+
+#[derive(Component)]
+pub struct ScoreUI;

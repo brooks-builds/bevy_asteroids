@@ -25,5 +25,23 @@ pub struct AsteroidCount(pub u8);
 #[derive(Resource, Debug, Deref, DerefMut)]
 pub struct Countdown(pub Timer);
 
-#[derive(Resource, Debug, Deref, DerefMut)]
+#[derive(Resource, Debug, Deref, DerefMut, Copy, Clone)]
 pub struct BeforeBossState(pub GameState);
+
+#[derive(Resource, Debug, Deref, DerefMut, Clone, Copy)]
+pub struct Score(pub u16);
+
+impl From<Score> for String {
+    fn from(value: Score) -> Self {
+        value.to_string()
+    }
+}
+
+#[derive(Resource, Debug, Deref, DerefMut, Clone, Copy)]
+pub struct HighScore(pub u16);
+
+impl From<HighScore> for String {
+    fn from(value: HighScore) -> Self {
+        value.to_string()
+    }
+}

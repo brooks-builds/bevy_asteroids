@@ -2,7 +2,8 @@ use std::ops::Deref;
 
 use crate::{
     components::*,
-    resources::{AsteroidCount, BeforeBossState, Countdown, WorldSize},
+    events::ScoreEvent,
+    resources::{AsteroidCount, BeforeBossState, Countdown, HighScore, Score, WorldSize},
     states::GameState,
 };
 use bevy::prelude::*;
@@ -57,13 +58,13 @@ pub fn transition_states(
 
 pub fn reset_game(
     mut asteroid_count: ResMut<AsteroidCount>,
-    mut asteroids_query: Query<Entity, With<Asteroid>>,
+    mut entities_to_despawn: Query<Entity, Or<(With<Bullet>, With<Asteroid>)>>,
     mut commands: Commands,
 ) {
     asteroid_count.0 = 1;
 
-    for asteroid in &mut asteroids_query {
-        commands.entity(asteroid).despawn();
+    for entity in &mut entities_to_despawn {
+        commands.entity(entity).despawn();
     }
 }
 
@@ -123,5 +124,17 @@ pub fn to_from_boss(
                 open::that("https://updatefaker.com/").ok();
             }
         }
+    }
+}
+
+pub fn update_scores(
+    mut score_events: EventReader<ScoreEvent>,
+    mut score: ResMut<Score>,
+    mut high_score: ResMut<HighScore>,
+) {
+    for &ScoreEvent(value) in score_events.read() {
+        **score += value;
+
+        **high_score = high_score.max(**score);
     }
 }

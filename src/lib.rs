@@ -6,8 +6,8 @@ mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use events::ExplosionEvent;
-use resources::{AsteroidCount, BeforeBossState, Countdown, WorldSize};
+use events::{ExplosionEvent, ScoreEvent};
+use resources::{AsteroidCount, BeforeBossState, Countdown, HighScore, Score, WorldSize};
 use states::GameState;
 
 const GET_READY_TIME: f32 = 4.;
@@ -23,6 +23,7 @@ struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.add_event::<ExplosionEvent>();
+        app.add_event::<ScoreEvent>();
 
         app.insert_resource(WorldSize(1920., 1080.));
         app.insert_resource(AsteroidCount(10));
@@ -31,6 +32,8 @@ impl Plugin for Game {
             GET_READY_TIME,
             TimerMode::Once,
         )));
+        app.insert_resource(Score(0));
+        app.insert_resource(HighScore(0));
 
         app.insert_state(GameState::Starting);
 
@@ -39,6 +42,7 @@ impl Plugin for Game {
             (
                 systems::camera_systems::add_camera,
                 systems::camera_systems::add_camera_border,
+                systems::ui::display_score,
             ),
         );
 
@@ -116,6 +120,8 @@ impl Plugin for Game {
                         // this chain tells the above systems that they need to run in order
                         .chain(),
                     systems::shared_systems::transition_from_playing_to_game_over,
+                    systems::shared_systems::update_scores,
+                    systems::ui::update_score_ui,
                 )
                     .run_if(in_state(GameState::Playing)),
                 (

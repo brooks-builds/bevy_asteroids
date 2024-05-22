@@ -15,10 +15,12 @@ todo
   - [x] game over
   - [x] boss (when the boss walks in and we have to hide)
 - [ ] score
-  - [ ] track score in a resource
-  - [ ] display score on screen
-  - [ ] track high score in resource
-  - [ ] display high score
+  - [x] track score in a resource
+  - [x] display score on screen
+  - [x] track high score in resource
+  - [x] display high score
+  - [ ] save high score on game over
+  - [ ] load high score on startup
 - [ ] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style
 - [ ] ufo

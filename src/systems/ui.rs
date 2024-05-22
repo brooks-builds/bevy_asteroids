@@ -1,13 +1,17 @@
 use bevy::{
-    ecs::system::{Commands, Query, Res},
-    text::{Text, TextSection, TextStyle},
-    ui::{
-        node_bundles::{self, TextBundle},
-        Style, UiRect,
+    ecs::{
+        query::With,
+        system::{Commands, Query, Res},
     },
+    text::{Text, TextSection, TextStyle},
+    ui::{node_bundles::TextBundle, Style, UiRect},
 };
 
-use crate::{components::UI, resources::Countdown, GET_READY_TIME};
+use crate::{
+    components::{ScoreUI, UI},
+    resources::{Countdown, HighScore, Score},
+    GET_READY_TIME,
+};
 
 pub fn title_screen(mut commands: Commands) {
     let game_name = "Asteroids";
@@ -41,8 +45,6 @@ pub fn title_screen(mut commands: Commands) {
     ));
 }
 
-pub fn playing_screen() {}
-
 pub fn get_ready_screen(mut commands: Commands) {
     let title = "Get Ready";
     let subtitle = format!("\n{}", 3);
@@ -75,11 +77,26 @@ pub fn get_ready_screen(mut commands: Commands) {
     ));
 }
 
-pub fn update_get_ready_screen(mut query: Query<&mut Text>, countdown: Res<Countdown>) {
+pub fn update_get_ready_screen(mut query: Query<&mut Text, With<UI>>, countdown: Res<Countdown>) {
+    if query.is_empty() {
+        return;
+    }
+
     let time_remaining = (GET_READY_TIME - countdown.elapsed_secs()) as u8;
     let mut text = query.single_mut();
 
     text.sections[1].value = format!("\n{time_remaining}");
+}
+
+pub fn update_score_ui(
+    mut query: Query<&mut Text, With<ScoreUI>>,
+    score: Res<Score>,
+    high_score: Res<HighScore>,
+) {
+    let mut text = query.single_mut();
+
+    text.sections[1].value = String::from(*score);
+    text.sections[3].value = String::from(*high_score);
 }
 
 pub fn game_over_screen(mut commands: Commands) {
@@ -113,5 +130,44 @@ pub fn game_over_screen(mut commands: Commands) {
         UI,
     ));
 }
-
-pub fn boss_screen() {}
+pub fn display_score(mut commands: Commands, score: Res<Score>, high_score: Res<HighScore>) {
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Score: ",
+                TextStyle {
+                    font_size: 25.,
+                    ..Default::default()
+                },
+            ),
+            TextSection::new(
+                *score,
+                TextStyle {
+                    font_size: 25.,
+                    ..Default::default()
+                },
+            ),
+            TextSection::new(
+                " high score:",
+                TextStyle {
+                    font_size: 25.,
+                    ..Default::default()
+                },
+            ),
+            TextSection::new(
+                *high_score,
+                TextStyle {
+                    font_size: 25.,
+                    ..Default::default()
+                },
+            ),
+        ])
+        .with_text_justify(bevy::text::JustifyText::Right)
+        .with_style(Style {
+            position_type: bevy::ui::PositionType::Absolute,
+            justify_self: bevy::ui::JustifySelf::End,
+            ..Default::default()
+        }),
+        ScoreUI,
+    ));
+}

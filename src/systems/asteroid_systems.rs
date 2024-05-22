@@ -1,6 +1,6 @@
 use crate::{
     components::{Asteroid, Bullet, Collidable, Position, Ship, Size, Velocity},
-    events::ExplosionEvent,
+    events::{ExplosionEvent, ScoreEvent},
     resources::{AsteroidCount, WorldSize},
 };
 use bevy::{prelude::*, render::color};
@@ -106,6 +106,7 @@ pub fn handle_collisions(
     bullet_query: Query<(&Position, &Size, Entity), With<Bullet>>,
     mut commands: Commands,
     mut explosion_event: EventWriter<ExplosionEvent>,
+    mut score_event: EventWriter<ScoreEvent>,
 ) {
     for (bullet_position, bullet_size, bullet_entity) in bullet_query.iter() {
         for (asteroid_position, asteroid_size, asteroid_entity) in asteroid_query.iter() {
@@ -116,6 +117,7 @@ pub fn handle_collisions(
             commands.entity(bullet_entity).despawn();
 
             explosion_event.send(ExplosionEvent(asteroid_position.clone()));
+            score_event.send(ScoreEvent(1));
             // create 2 asteroids
 
             let mut rng = thread_rng();
