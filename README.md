@@ -10,8 +10,8 @@ todo
 - [x] Remove the explosions so we don't fill up memory if we play a long time
 - [ ] screens
   - [x] start
-  - [ ] get ready
-  - [ ] playing
+  - [x] get ready
+  - [x] playing
   - [ ] game over
   - [ ] boss (when the boss walks in and we have to hide)
 - [ ] score
@@ -20,4 +20,5 @@ todo
   - [ ] track high score in resource
   - [ ] display high score
 - [ ] teleport ship
+- [ ] rewrite collision system to use Rasmusgo's style
 - [ ] ufo

@@ -96,3 +96,18 @@ pub fn reset_countdown(mut countdown: ResMut<Countdown>) {
 pub fn tick_countdown(mut countdown: ResMut<Countdown>, time: Res<Time>) {
     countdown.tick(time.delta());
 }
+
+pub fn transition_from_get_ready_to_playing(
+    countdown: Res<Countdown>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    current_game_state: Res<State<GameState>>,
+) {
+    if !countdown.finished() {
+        return;
+    }
+
+    match current_game_state.get() {
+        GameState::GetReady => next_game_state.set(GameState::Playing),
+        _ => unreachable!(),
+    };
+}

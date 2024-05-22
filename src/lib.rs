@@ -69,6 +69,11 @@ impl Plugin for Game {
         );
 
         app.add_systems(
+            OnExit(GameState::GetReady),
+            (systems::shared_systems::reset_ui,),
+        );
+
+        app.add_systems(
             Update,
             (
                 (
@@ -81,11 +86,13 @@ impl Plugin for Game {
                 (
                     systems::shared_systems::tick_countdown,
                     systems::ui::update_get_ready_screen,
+                    systems::shared_systems::transition_from_get_ready_to_playing,
                 )
                     .run_if(in_state(GameState::GetReady)),
                 (
                     systems::ship_systems::change_thruster_colors,
                     (
+                        systems::shared_systems::wraparound_entities,
                         systems::ship_systems::input_rotate_ship,
                         systems::ship_systems::rotate_ship,
                         systems::ship_systems::input_thrust_ship,
@@ -101,7 +108,9 @@ impl Plugin for Game {
                         systems::explosion::handle_explosion_event,
                         systems::explosion::remove_explosion,
                         systems::explosion::update_explosion,
+                        systems::shared_systems::update_positions,
                     )
+                        // this chain tells the above systems that they need to run in order
                         .chain(),
                 )
                     .run_if(in_state(GameState::Playing)),
