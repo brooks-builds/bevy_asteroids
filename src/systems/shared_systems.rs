@@ -65,7 +65,7 @@ pub fn transition_states(
             GameState::Starting => next_game_state.set(GameState::GetReady),
             GameState::GetReady => unreachable!(),
             GameState::Playing => unreachable!(),
-            GameState::GameOver => next_game_state.set(GameState::Starting),
+            GameState::GameOver => next_game_state.set(GameState::GetReady),
             GameState::Boss => todo!(),
         };
     }
@@ -110,4 +110,15 @@ pub fn transition_from_get_ready_to_playing(
         GameState::GetReady => next_game_state.set(GameState::Playing),
         _ => unreachable!(),
     };
+}
+
+pub fn transition_from_playing_to_game_over(
+    ship_query: Query<Entity, With<Ship>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    if !ship_query.is_empty() {
+        return;
+    }
+
+    next_game_state.set(GameState::GameOver);
 }

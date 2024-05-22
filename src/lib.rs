@@ -87,6 +87,8 @@ impl Plugin for Game {
                     systems::shared_systems::tick_countdown,
                     systems::ui::update_get_ready_screen,
                     systems::shared_systems::transition_from_get_ready_to_playing,
+                    systems::explosion::update_explosion,
+                    systems::explosion::remove_explosion,
                 )
                     .run_if(in_state(GameState::GetReady)),
                 (
@@ -112,8 +114,28 @@ impl Plugin for Game {
                     )
                         // this chain tells the above systems that they need to run in order
                         .chain(),
+                    systems::shared_systems::transition_from_playing_to_game_over,
                 )
                     .run_if(in_state(GameState::Playing)),
+                (
+                    systems::shared_systems::transition_states,
+                    systems::explosion::update_explosion,
+                    systems::explosion::remove_explosion,
+                )
+                    .run_if(in_state(GameState::GameOver)),
+            ),
+        );
+
+        app.add_systems(
+            OnEnter(GameState::GameOver),
+            (systems::ui::game_over_screen,),
+        );
+
+        app.add_systems(
+            OnExit(GameState::GameOver),
+            (
+                systems::shared_systems::reset_ui,
+                systems::shared_systems::reset_game,
             ),
         );
     }

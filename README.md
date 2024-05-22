@@ -12,7 +12,7 @@ todo
   - [x] start
   - [x] get ready
   - [x] playing
-  - [ ] game over
+  - [x] game over
   - [ ] boss (when the boss walks in and we have to hide)
 - [ ] score
   - [ ] track score in a resource

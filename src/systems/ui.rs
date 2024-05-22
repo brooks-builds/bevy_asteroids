@@ -3,7 +3,7 @@ use bevy::{
     text::{Text, TextSection, TextStyle},
     ui::{
         node_bundles::{self, TextBundle},
-        Style,
+        Style, UiRect,
     },
 };
 
@@ -68,7 +68,7 @@ pub fn get_ready_screen(mut commands: Commands) {
         .with_style(Style {
             position_type: bevy::ui::PositionType::Absolute,
             justify_self: bevy::ui::JustifySelf::Center,
-            align_self: bevy::ui::AlignSelf::Center,
+            margin: UiRect::top(bevy::ui::Val::Vh(25.)),
             ..Default::default()
         }),
         UI,
@@ -82,6 +82,36 @@ pub fn update_get_ready_screen(mut query: Query<&mut Text>, countdown: Res<Count
     text.sections[1].value = format!("\n{time_remaining}");
 }
 
-pub fn game_over_screen() {}
+pub fn game_over_screen(mut commands: Commands) {
+    let title = "Game Over";
+    let subtitle = format!("\nScore: {}\nPress space to try again", 3);
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                title,
+                TextStyle {
+                    font_size: 100.,
+                    ..Default::default()
+                },
+            ),
+            TextSection::new(
+                subtitle,
+                TextStyle {
+                    font_size: 25.,
+                    ..Default::default()
+                },
+            ),
+        ])
+        .with_text_justify(bevy::text::JustifyText::Center)
+        .with_style(Style {
+            position_type: bevy::ui::PositionType::Absolute,
+            justify_self: bevy::ui::JustifySelf::Center,
+            margin: UiRect::top(bevy::ui::Val::Vh(25.)),
+            ..Default::default()
+        }),
+        UI,
+    ));
+}
 
 pub fn boss_screen() {}
