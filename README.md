@@ -30,5 +30,15 @@ todo
   - [x] switch to get ready state
 - [x] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style
-- [ ] ufo
-- [ ] come up with a twist
+- [x] ufo
+  - [x] spawn ufo x seconds into a level
+  - [x] ufo moves randomly
+  - [x] ufo fires bullets towards the current location of player
+  - [x] ufo bullets can kill player
+  - [x] ufo bullets can kill asteroids
+  - [x] ship bullets can kill ufo
+- [ ] sounds
+  - [ ] firing bullet
+  - [ ] explosion
+  - [ ] ufo
+  - [ ] thrusting

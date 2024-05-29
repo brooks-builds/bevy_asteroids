@@ -7,7 +7,7 @@ mod systems;
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
 use events::{ExplosionEvent, ScoreEvent};
-use resources::{AsteroidCount, BeforeBossState, Countdown, HighScore, Score, WorldSize};
+use resources::{AsteroidCount, BeforeBossState, Countdown, HighScore, Score, UfoTimer, WorldSize};
 use states::GameState;
 
 const GET_READY_TIME: f32 = 4.;
@@ -34,6 +34,7 @@ impl Plugin for Game {
         )));
         app.insert_resource(Score(0));
         app.insert_resource(HighScore(0));
+        app.insert_resource(UfoTimer(Timer::from_seconds(15., TimerMode::Once)));
 
         app.insert_state(GameState::Starting);
 
@@ -83,7 +84,10 @@ impl Plugin for Game {
 
         app.add_systems(
             OnExit(GameState::GetReady),
-            (systems::shared_systems::reset_ui,),
+            (
+                systems::shared_systems::reset_ui,
+                systems::ufo_systems::set_ufo_spawn_timer,
+            ),
         );
 
         app.add_systems(
@@ -115,7 +119,7 @@ impl Plugin for Game {
                         systems::ship_systems::apply_thrust,
                         systems::shared_systems::apply_velocity,
                         systems::ship_systems::input_firing,
-                        systems::bullet_systems::fire_bullet,
+                        systems::bullet_systems::ship_fire_bullet,
                         systems::bullet_systems::delete_expired_bullets,
                         // systems::debug_systems::visualize_size,
                         systems::ship_systems::handle_ship_collisions,
@@ -132,6 +136,14 @@ impl Plugin for Game {
                     systems::ui::update_score_ui,
                     systems::asteroid_systems::end_level,
                     systems::ship_systems::teleport_ship,
+                    systems::ufo_systems::ufo_spawn_timer_update,
+                    systems::ufo_systems::spawn_ufo,
+                    systems::ufo_systems::update_velocity,
+                    systems::ufo_systems::handle_ufo_bullet_collisions,
+                    systems::ufo_systems::update,
+                    systems::bullet_systems::ufo_fire_bullet,
+                    systems::ship_systems::handle_ship_bullet_collisions
+                        .after(systems::ship_systems::change_thruster_colors),
                 )
                     .run_if(in_state(GameState::Playing)),
                 (

@@ -5,4 +5,5 @@ pub mod debug_systems;
 pub mod explosion;
 pub mod shared_systems;
 pub mod ship_systems;
+pub mod ufo_systems;
 pub mod ui;

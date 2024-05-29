@@ -3,13 +3,13 @@ use std::time::Duration;
 use crate::components::*;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
-pub fn fire_bullet(
+pub fn ship_fire_bullet(
     mut commands: Commands,
     mut firing_query: Query<&mut Firing>,
     mut ship_query: Query<(&Position, &Rotation, &mut FiringTimer, &Velocity), With<Ship>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    bullet_query: Query<&Bullet>,
+    bullet_query: Query<&Bullet, With<ShipBullet>>,
     time: Res<Time>,
 ) {
     let Ok(mut firing) = firing_query.get_single_mut() else {
@@ -65,6 +65,7 @@ pub fn fire_bullet(
         bullet_timer,
         Collidable,
         bullet_size,
+        ShipBullet,
     ));
 }
 
@@ -86,4 +87,51 @@ pub fn delete_all_bullets(bullet_query: Query<Entity, With<Bullet>>, mut command
     for bullet in &bullet_query {
         commands.entity(bullet).despawn();
     }
+}
+pub fn ufo_fire_bullet(
+    mut commands: Commands,
+    mut ufo_query: Query<(&Position, &mut FiringTimer), With<UFO>>,
+    ship_query: Query<&Position, With<Ship>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    let Some(ship_position) = ship_query.get_single().ok() else {
+        return;
+    };
+    let Some((ufo_position, mut ufo_firing_timer)) = ufo_query.get_single_mut().ok() else {
+        return;
+    };
+
+    if !ufo_firing_timer.finished() {
+        return;
+    }
+
+    ufo_firing_timer.reset();
+
+    let bullet_size = Size(7.5);
+    let bullet_position = ufo_position.clone();
+    let bullet_mesh = MaterialMesh2dBundle {
+        mesh: meshes.add(Circle::default()).into(),
+        material: materials.add(Color::ALICE_BLUE),
+        transform: Transform::default().with_scale(Vec3::splat(*bullet_size)),
+        ..Default::default()
+    };
+    let direction = (**ship_position - **ufo_position).normalize() * 1000.;
+
+    let bullet_velocity = Velocity(direction);
+    let bullet_timer = BulletTimer(Timer::new(
+        Duration::from_millis(1000),
+        bevy::time::TimerMode::Once,
+    ));
+
+    commands.spawn((
+        Bullet,
+        bullet_position,
+        bullet_velocity,
+        bullet_mesh,
+        bullet_timer,
+        Collidable,
+        bullet_size,
+        UfoBullet,
+    ));
 }

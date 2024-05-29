@@ -11,6 +11,10 @@ use crate::resources::WorldSize;
 pub struct Position(pub Vec3);
 
 impl Position {
+    pub fn new_random_edge(world_size: &WorldSize) -> Self {
+        Self(world_size.get_random_edge())
+    }
+
     pub fn set_random(&mut self, world_size: &WorldSize) {
         self.0 = world_size.get_random_coords();
     }
@@ -85,3 +89,12 @@ pub struct UI;
 
 #[derive(Component)]
 pub struct ScoreUI;
+
+#[derive(Component)]
+pub struct UFO;
+
+#[derive(Component)]
+pub struct ShipBullet;
+
+#[derive(Component)]
+pub struct UfoBullet;

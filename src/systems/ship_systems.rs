@@ -5,7 +5,7 @@ use bevy::{core::Zeroable, prelude::*, sprite::MaterialMesh2dBundle};
 use crate::{
     components::{
         Asteroid, Collidable, Firing, FiringTimer, Position, RotateSpeed, Rotation, Ship, Size,
-        Thrust, Velocity,
+        Thrust, UfoBullet, Velocity,
     },
     events::ExplosionEvent,
     resources::WorldSize,
@@ -67,7 +67,7 @@ pub fn add_player(
     ship.add_child(ship_thruster);
 }
 
-pub fn change_thruster_colors(mut query: Query<(&Thrust, &Children)>, mut commands: Commands) {
+pub fn change_thruster_colors(mut query: Query<(&Thrust, &mut Children)>, mut commands: Commands) {
     for (thrust, children) in &mut query {
         let thrusters = children
             .first()
@@ -166,6 +166,26 @@ pub fn teleport_ship(
     if keyboard_input.clear_just_pressed(KeyCode::Enter) {
         if let Some(mut ship_position) = ship_query.get_single_mut().ok() {
             ship_position.set_random(&*world_size);
+        }
+    }
+}
+pub fn handle_ship_bullet_collisions(
+    ship_query: Query<(&Position, &Size, Entity), With<Ship>>,
+    bullet_query: Query<(&Position, &Size, Entity), With<UfoBullet>>,
+    mut commands: Commands,
+    mut explosion_event: EventWriter<ExplosionEvent>,
+) {
+    for (bullet_position, bullet_size, bullet_entity) in bullet_query.iter() {
+        for (ship_position, ship_size, ship) in ship_query.iter() {
+            if bullet_position.distance(**ship_position) > **bullet_size + **ship_size {
+                continue;
+            }
+            commands.entity(ship).despawn_recursive();
+            commands.entity(bullet_entity).despawn();
+
+            explosion_event.send(ExplosionEvent(ship_position.clone()));
+
+            break; // Each bullet can only hit one asteroid
         }
     }
 }

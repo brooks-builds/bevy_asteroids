@@ -59,7 +59,7 @@ pub fn transition_states(
 
 pub fn reset_game(
     mut asteroid_count: ResMut<AsteroidCount>,
-    mut entities_to_despawn: Query<Entity, Or<(With<Bullet>, With<Asteroid>)>>,
+    mut entities_to_despawn: Query<Entity, Or<(With<Bullet>, With<Asteroid>, With<UFO>)>>,
     mut commands: Commands,
     mut score: ResMut<Score>,
 ) {
