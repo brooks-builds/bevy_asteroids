@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::{component::Component, query::QueryFilter},
+    ecs::component::Component,
     math::{bounding::BoundingCircle, Quat, Vec3},
     prelude::{Deref, DerefMut, Vec2},
     time::Timer,

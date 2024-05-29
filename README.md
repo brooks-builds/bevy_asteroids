@@ -14,7 +14,7 @@ todo
   - [x] playing
   - [x] game over
   - [x] boss (when the boss walks in and we have to hide)
-- [ ] score
+- [x] score
   - [x] track score in a resource
   - [x] display score on screen
   - [x] track high score in resource
@@ -22,7 +22,8 @@ todo
   - [x] save high score on game over
   - [x] load high score on startup
   - [x] update game over screen with correct score
-  - [ ] get ready should show correct high score
+  - [x] get ready should show correct high score
+  - [x] when restarting game score should reset
 - [ ] After destroying all asteroids, level increases
 - [ ] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style

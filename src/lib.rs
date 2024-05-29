@@ -42,8 +42,8 @@ impl Plugin for Game {
             (
                 systems::camera_systems::add_camera,
                 systems::camera_systems::add_camera_border,
-                systems::ui::display_score,
-                systems::shared_systems::load_high_score.after(systems::ui::display_score),
+                systems::ui::display_score.after(systems::shared_systems::load_high_score),
+                systems::shared_systems::load_high_score,
             ),
         );
 
@@ -101,6 +101,7 @@ impl Plugin for Game {
                     systems::shared_systems::transition_from_get_ready_to_playing,
                     systems::explosion::update_explosion,
                     systems::explosion::remove_explosion,
+                    systems::ui::update_score_ui,
                 )
                     .run_if(in_state(GameState::GetReady)),
                 (

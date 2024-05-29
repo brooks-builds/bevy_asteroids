@@ -61,12 +61,15 @@ pub fn reset_game(
     mut asteroid_count: ResMut<AsteroidCount>,
     mut entities_to_despawn: Query<Entity, Or<(With<Bullet>, With<Asteroid>)>>,
     mut commands: Commands,
+    mut score: ResMut<Score>,
 ) {
     asteroid_count.0 = 1;
 
     for entity in &mut entities_to_despawn {
         commands.entity(entity).despawn();
     }
+
+    score.0 = 0;
 }
 
 pub fn reset_ui(query: Query<Entity, With<UI>>, mut commands: Commands) {
@@ -145,15 +148,10 @@ pub fn save_high_score(high_score: Res<HighScore>) {
         let directory_path = project_directory.data_dir();
         let path = directory_path.join("high_score");
 
-        println!(
-            "Creating directory if it doesn't exist: {:?}",
-            directory_path
-        );
         if let Err(error) = std::fs::create_dir_all(directory_path) {
             eprintln!("There was an error creating the data directory: {error:?}");
         }
 
-        println!("Saving high score to: {:?}", path);
         if let Err(error) = std::fs::write(path, String::from(*high_score)) {
             eprintln!("There was an error saving your high score :( : {error:?}");
         }
@@ -165,7 +163,6 @@ pub fn load_high_score(mut high_score: ResMut<HighScore>) {
         let directory_path = project_directory.data_dir();
         let path = directory_path.join("high_score");
 
-        println!("loading high score from: {:?}", path);
         match std::fs::read_to_string(path) {
             Ok(saved_high_score) => **high_score = saved_high_score.parse().unwrap_or_default(),
             Err(error) => eprintln!("There was an error saving your high score :( : {error:?}"),
