@@ -99,9 +99,9 @@ pub fn update_score_ui(
     text.sections[3].value = String::from(*high_score);
 }
 
-pub fn game_over_screen(mut commands: Commands) {
+pub fn game_over_screen(mut commands: Commands, score: Res<Score>) {
     let title = "Game Over";
-    let subtitle = format!("\nScore: {}\nPress space to try again", 3);
+    let subtitle = format!("\nScore: {}\nPress space to try again", **score);
 
     commands.spawn((
         TextBundle::from_sections([
