@@ -24,7 +24,10 @@ todo
   - [x] update game over screen with correct score
   - [x] get ready should show correct high score
   - [x] when restarting game score should reset
-- [ ] After destroying all asteroids, level increases
+- [x] After destroying all asteroids, level increases
+  - [x] detect all asteroids are gone
+  - [x] increase the number of asteroids
+  - [x] switch to get ready state
 - [ ] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style
 - [ ] ufo

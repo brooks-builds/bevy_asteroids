@@ -17,7 +17,12 @@ pub fn add_player(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    ship_query: Query<&Ship>,
 ) {
+    if !ship_query.is_empty() {
+        return;
+    }
+
     materials.insert(NORMAL_SHIP_COLOR_ID, Color::ANTIQUE_WHITE.into());
     materials.insert(THRUSTING_SHIP_COLOR_ID, Color::RED.into());
 

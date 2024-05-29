@@ -77,6 +77,7 @@ impl Plugin for Game {
                     .after(systems::asteroid_systems::spawn_asteroids),
                 systems::shared_systems::reset_countdown,
                 systems::ui::get_ready_screen,
+                systems::bullet_systems::delete_all_bullets,
             ),
         );
 
@@ -129,6 +130,7 @@ impl Plugin for Game {
                     systems::shared_systems::transition_from_playing_to_game_over,
                     systems::shared_systems::update_scores,
                     systems::ui::update_score_ui,
+                    systems::asteroid_systems::end_level,
                 )
                     .run_if(in_state(GameState::Playing)),
                 (

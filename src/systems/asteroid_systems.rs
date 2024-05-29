@@ -2,6 +2,7 @@ use crate::{
     components::{Asteroid, Bullet, Collidable, Position, Ship, Size, Velocity},
     events::{ExplosionEvent, ScoreEvent},
     resources::{AsteroidCount, WorldSize},
+    states::GameState,
 };
 use bevy::{prelude::*, render::color};
 use bevy_prototype_lyon::{
@@ -130,5 +131,22 @@ pub fn handle_collisions(
 
             break; // Each bullet can only hit one asteroid
         }
+    }
+}
+
+pub fn end_level(
+    asteroids_query: Query<&Asteroid>,
+    mut asteroid_count: ResMut<AsteroidCount>,
+    current_state: Res<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if !asteroids_query.is_empty() {
+        return;
+    }
+
+    asteroid_count.0 += 1;
+
+    if let GameState::Playing = current_state.get() {
+        next_state.set(GameState::GetReady);
     }
 }

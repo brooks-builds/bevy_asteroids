@@ -81,3 +81,9 @@ pub fn delete_expired_bullets(
         }
     }
 }
+
+pub fn delete_all_bullets(bullet_query: Query<Entity, With<Bullet>>, mut commands: Commands) {
+    for bullet in &bullet_query {
+        commands.entity(bullet).despawn();
+    }
+}
