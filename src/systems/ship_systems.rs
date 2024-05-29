@@ -8,6 +8,7 @@ use crate::{
         Thrust, Velocity,
     },
     events::ExplosionEvent,
+    resources::WorldSize,
 };
 
 const NORMAL_SHIP_COLOR_ID: Handle<ColorMaterial> = Handle::weak_from_u128(389743489572398);
@@ -153,6 +154,18 @@ pub fn handle_ship_collisions(
             bevy_commands.entity(ship_entity).despawn_recursive();
             explosion_event.send(ExplosionEvent(ship_position.clone()));
             break;
+        }
+    }
+}
+
+pub fn teleport_ship(
+    mut keyboard_input: ResMut<ButtonInput<KeyCode>>,
+    world_size: Res<WorldSize>,
+    mut ship_query: Query<&mut Position, With<Ship>>,
+) {
+    if keyboard_input.clear_just_pressed(KeyCode::Enter) {
+        if let Some(mut ship_position) = ship_query.get_single_mut().ok() {
+            ship_position.set_random(&*world_size);
         }
     }
 }

@@ -5,8 +5,16 @@ use bevy::{
     time::Timer,
 };
 
+use crate::resources::WorldSize;
+
 #[derive(Component, Clone, Debug, Deref, DerefMut, Copy, Default)]
 pub struct Position(pub Vec3);
+
+impl Position {
+    pub fn set_random(&mut self, world_size: &WorldSize) {
+        self.0 = world_size.get_random_coords();
+    }
+}
 
 impl From<&Position> for Vec2 {
     fn from(value: &Position) -> Self {

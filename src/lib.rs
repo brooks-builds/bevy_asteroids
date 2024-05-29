@@ -131,6 +131,7 @@ impl Plugin for Game {
                     systems::shared_systems::update_scores,
                     systems::ui::update_score_ui,
                     systems::asteroid_systems::end_level,
+                    systems::ship_systems::teleport_ship,
                 )
                     .run_if(in_state(GameState::Playing)),
                 (

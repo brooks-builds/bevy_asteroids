@@ -1,14 +1,29 @@
 use bevy::{
     ecs::system::Resource,
-    math::Vec2,
+    math::{Vec2, Vec3},
     prelude::{Deref, DerefMut},
     time::Timer,
 };
+use rand::{thread_rng, Rng};
 
 use crate::states::GameState;
 
 #[derive(Resource, Debug)]
 pub struct WorldSize(pub f32, pub f32);
+
+impl WorldSize {
+    pub fn get_random_coords(&self) -> Vec3 {
+        let mut rng = thread_rng();
+        let half_width = self.0 / 2.;
+        let half_height = self.1 / 2.;
+
+        Vec3::new(
+            rng.gen_range(-half_width..half_width),
+            rng.gen_range(-half_height..half_height),
+            0.,
+        )
+    }
+}
 
 impl From<&WorldSize> for Vec2 {
     fn from(value: &WorldSize) -> Self {

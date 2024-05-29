@@ -28,7 +28,7 @@ todo
   - [x] detect all asteroids are gone
   - [x] increase the number of asteroids
   - [x] switch to get ready state
-- [ ] teleport ship
+- [x] teleport ship
 - [x] rewrite collision system to use Rasmusgo's style
 - [ ] ufo
 - [ ] come up with a twist
