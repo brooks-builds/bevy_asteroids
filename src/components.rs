@@ -98,3 +98,9 @@ pub struct ShipBullet;
 
 #[derive(Component)]
 pub struct UfoBullet;
+
+#[derive(Component)]
+pub struct ShipFireAudio;
+
+#[derive(Component)]
+pub struct UfoFireAudio;

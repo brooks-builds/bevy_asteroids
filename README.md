@@ -37,8 +37,10 @@ todo
   - [x] ufo bullets can kill player
   - [x] ufo bullets can kill asteroids
   - [x] ship bullets can kill ufo
-- [ ] sounds
-  - [ ] firing bullet
-  - [ ] explosion
-  - [ ] ufo
-  - [ ] thrusting
+- [x] sounds
+  - [x] firing bullet
+  - [x] explosion
+  - [x] ufo
+  - [x] thrusting
+
+  All sounds created by [chiptone](https://sfbgames.itch.io/chiptone).

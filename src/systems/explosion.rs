@@ -8,6 +8,7 @@ use bevy_prototype_lyon::{draw::Stroke, entity::ShapeBundle, geometry::GeometryB
 pub fn handle_explosion_event(
     mut explosion_event: EventReader<ExplosionEvent>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
 ) {
     for explosion in explosion_event.read() {
         let position = explosion.0.clone();
@@ -24,6 +25,14 @@ pub fn handle_explosion_event(
             Stroke::new(Color::ANTIQUE_WHITE, 5.),
             Explosion,
             position,
+            AudioBundle {
+                source: asset_server.load("boom.wav"),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Remove,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
         ));
     }
 }

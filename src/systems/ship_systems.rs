@@ -19,6 +19,7 @@ pub fn add_player(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     ship_query: Query<&Ship>,
+    asset_server: Res<AssetServer>,
 ) {
     if !ship_query.is_empty() {
         return;
@@ -43,7 +44,7 @@ pub fn add_player(
     let rotation = Rotation(Quat::default());
     let thrust = Thrust(false);
     let velocity = Velocity(Vec3::zeroed());
-    let ship_thruster = commands.spawn(thrust_mesh).id();
+    let ship_thruster = commands.spawn((thrust_mesh,)).id();
     let firing = Firing(false);
     let firing_timer = FiringTimer(Timer::new(
         Duration::from_millis(250),
@@ -62,21 +63,34 @@ pub fn add_player(
         firing_timer,
         Collidable,
         ship_size,
+        AudioBundle {
+            source: asset_server.load("thrust.wav"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                paused: true,
+                ..Default::default()
+            },
+        },
     ));
 
     ship.add_child(ship_thruster);
 }
 
-pub fn change_thruster_colors(mut query: Query<(&Thrust, &mut Children)>, mut commands: Commands) {
-    for (thrust, children) in &mut query {
+pub fn change_thruster_colors(
+    mut query: Query<(&Thrust, &AudioSink, &mut Children)>,
+    mut commands: Commands,
+) {
+    for (thrust, audio_sink, children) in &mut query {
         let thrusters = children
             .first()
             .expect("couldn't find the first child, which should be thrusters");
 
         if thrust.0 {
             commands.entity(*thrusters).insert(THRUSTING_SHIP_COLOR_ID);
+            audio_sink.play();
         } else {
             commands.entity(*thrusters).insert(NORMAL_SHIP_COLOR_ID);
+            audio_sink.pause();
         }
     }
 }

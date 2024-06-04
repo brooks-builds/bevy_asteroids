@@ -11,6 +11,7 @@ pub fn ship_fire_bullet(
     mut meshes: ResMut<Assets<Mesh>>,
     bullet_query: Query<&Bullet, With<ShipBullet>>,
     time: Res<Time>,
+    asset_server: Res<AssetServer>,
 ) {
     let Ok(mut firing) = firing_query.get_single_mut() else {
         return;
@@ -66,6 +67,14 @@ pub fn ship_fire_bullet(
         Collidable,
         bullet_size,
         ShipBullet,
+        AudioBundle {
+            source: asset_server.load("ship_fire.wav"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Remove,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
     ));
 }
 
@@ -94,6 +103,7 @@ pub fn ufo_fire_bullet(
     ship_query: Query<&Position, With<Ship>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
 ) {
     let Some(ship_position) = ship_query.get_single().ok() else {
         return;
@@ -133,5 +143,13 @@ pub fn ufo_fire_bullet(
         Collidable,
         bullet_size,
         UfoBullet,
+        AudioBundle {
+            source: asset_server.load("ufo_fire.wav"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Remove,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
     ));
 }
