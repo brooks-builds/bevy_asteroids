@@ -111,9 +111,9 @@ pub fn input_rotate_ship(
 ) {
     for mut rotate_speed in &mut query {
         rotate_speed.0 = if keyboard_input.pressed(KeyCode::ArrowLeft) {
-            1.0
+            2.0
         } else if keyboard_input.pressed(KeyCode::ArrowRight) {
-            -1.0
+            -2.0
         } else {
             0.0
         };

@@ -1,11 +1,12 @@
 mod components;
 pub mod events;
-mod resources;
+pub mod resources;
 mod states;
 mod systems;
 
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
+use bot::Bot;
 use events::{ExplosionEvent, ScoreEvent};
 use resources::{AsteroidCount, BeforeBossState, Countdown, HighScore, Score, UfoTimer, WorldSize};
 use states::GameState;
@@ -14,11 +15,21 @@ const GET_READY_TIME: f32 = 4.;
 
 pub fn run() {
     App::new()
-        .add_plugins((DefaultPlugins, ShapePlugin, Game))
+        .add_plugins((DefaultPlugins, ShapePlugin, Game::new()))
         .run();
 }
 
-struct Game;
+struct Game {
+    bot: Bot,
+}
+
+impl Game {
+    pub fn new() -> Self {
+        let bot = Bot::new(8);
+
+        Self { bot }
+    }
+}
 
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
@@ -45,6 +56,7 @@ impl Plugin for Game {
                 systems::camera_systems::add_camera_border,
                 systems::ui::display_score.after(systems::shared_systems::load_high_score),
                 systems::shared_systems::load_high_score,
+                set_speed,
             ),
         );
 
@@ -169,4 +181,8 @@ impl Plugin for Game {
             ),
         );
     }
+}
+
+fn set_speed(mut time: ResMut<Time<Virtual>>) {
+    time.set_relative_speed(1.0);
 }

@@ -43,4 +43,21 @@ todo
   - [x] ufo
   - [x] thrusting
 
+# AI
+
+- [ ] set speed of game to really fast
+  - [ ] toggle speed on number key input
+  - [ ] set speed
+  - [ ] display speed
+- [ ] toggle bot mode
+- [ ] ai
+  - [ ] loop
+    - [ ] create population
+    - [ ] for each individual
+      - [ ] start a new game
+      - [ ] play until it dies
+    - [ ] next gen the bots
+    - [ ] save the weights at the end of every gen
+    - [ ] load weights from file 
+
   All sounds created by [chiptone](https://sfbgames.itch.io/chiptone).
